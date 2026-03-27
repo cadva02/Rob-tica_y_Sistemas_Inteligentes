@@ -1,6 +1,7 @@
 # Rob-tica_y_Sistemas_Inteligentes
 Proyectos de Robótica y Sistemas Inteligentes (TE3003B)
 8vo Semestre | Ingeniería en Robótica y Sistemas Digitales
+
 -Alfredo Díaz López
 -Juan Paulo Salgado Arvizu
 -Carlos Adrián Delgado Vázquez
