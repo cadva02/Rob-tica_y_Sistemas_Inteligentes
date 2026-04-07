@@ -34,20 +34,51 @@ class DronePublisher(Node):
     def timer_cb(self):
         elapsed_time = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
         
+        # Publish map -> odom transform (static - represents map origin)
+        t_map = TransformStamped()
+        t_map.header.stamp = self.get_clock().now().to_msg()
+        t_map.header.frame_id = 'map'
+        t_map.child_frame_id = 'odom'
+        
+        # Map is offset from odom to show they are different frames
+        # In real robots, this would be updated by SLAM/localization
+        t_map.transform.translation.x = 0.5  # Negative offset (inverted relationship)
+        t_map.transform.translation.y = 0.5  # Negative offset (inverted relationship)
+        t_map.transform.translation.z = 0.0
+        
+        q_map = transforms3d.euler.euler2quat(0, 0, 0)
+        t_map.transform.rotation.x = q_map[1]
+        t_map.transform.rotation.y = q_map[2]
+        t_map.transform.rotation.z = q_map[3]
+        t_map.transform.rotation.w = q_map[0]
+        
+        self.tf_broadcaster.sendTransform(t_map)
+        
         # Publish odom -> base_footprint transform
         t_odom = TransformStamped()
         t_odom.header.stamp = self.get_clock().now().to_msg()
         t_odom.header.frame_id = 'odom'
         t_odom.child_frame_id = 'base_footprint'
         
-        # Simple forward motion
-        velocity = self.wheel_radius * self.omega_left
-        t_odom.transform.translation.x = velocity * elapsed_time
-        t_odom.transform.translation.y = 0.0
+        # Robot orbits around the map origin in odom frame
+        # The map is at (-0.5, -0.5) in odom frame (inverse of the map->odom transform)
+        
+        radius = 0.5
+        angular_velocity = 0.5  # rad/s
+        angle = angular_velocity * elapsed_time
+        
+        # Center of circle in odom frame (at map origin)
+        center_x = -0.5
+        center_y = -0.5
+        
+        # Position on the circle
+        t_odom.transform.translation.x = center_x + radius * np.cos(angle)
+        t_odom.transform.translation.y = center_y + radius * np.sin(angle)
         t_odom.transform.translation.z = 0.0
         
-        # No rotation
-        q = transforms3d.euler.euler2quat(0, 0, 0)
+        # Rotation to face the direction of movement (tangent to circle)
+        heading_angle = angle + np.pi / 2.0  # Perpendicular to radius
+        q = transforms3d.euler.euler2quat(0, 0, heading_angle)
         t_odom.transform.rotation.x = q[1]
         t_odom.transform.rotation.y = q[2]
         t_odom.transform.rotation.z = q[3]
@@ -61,7 +92,7 @@ class DronePublisher(Node):
         t_base.header.frame_id = 'base_footprint'
         t_base.child_frame_id = 'base_link'
         
-        # Fixed height offset
+        # Fixed height offset only (robot rotates around itself)
         t_base.transform.translation.x = 0.0
         t_base.transform.translation.y = 0.0
         t_base.transform.translation.z = 0.05
@@ -119,9 +150,9 @@ class DronePublisher(Node):
         t_caster.header.frame_id = 'base_link'
         t_caster.child_frame_id = 'caster_ball'
         
-        t_caster.transform.translation.x = 0.10
+        t_caster.transform.translation.x = -0.12
         t_caster.transform.translation.y = 0.0
-        t_caster.transform.translation.z = -0.03
+        t_caster.transform.translation.z = -0.08
         
         q_caster = transforms3d.euler.euler2quat(0, 0, 0)
         t_caster.transform.rotation.x = q_caster[1]
