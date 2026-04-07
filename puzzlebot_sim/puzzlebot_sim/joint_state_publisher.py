@@ -1,4 +1,3 @@
-
 import rclpy
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
@@ -35,17 +34,37 @@ class DronePublisher(Node):
     def timer_cb(self):
         elapsed_time = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
         
-        # Publish base_link transform (world -> base_link)
+        # Publish odom -> base_footprint transform
+        t_odom = TransformStamped()
+        t_odom.header.stamp = self.get_clock().now().to_msg()
+        t_odom.header.frame_id = 'odom'
+        t_odom.child_frame_id = 'base_footprint'
+        
+        # Simple forward motion
+        velocity = self.wheel_radius * self.omega_left
+        t_odom.transform.translation.x = velocity * elapsed_time
+        t_odom.transform.translation.y = 0.0
+        t_odom.transform.translation.z = 0.0
+        
+        # No rotation
+        q = transforms3d.euler.euler2quat(0, 0, 0)
+        t_odom.transform.rotation.x = q[1]
+        t_odom.transform.rotation.y = q[2]
+        t_odom.transform.rotation.z = q[3]
+        t_odom.transform.rotation.w = q[0]
+        
+        self.tf_broadcaster.sendTransform(t_odom)
+        
+        # Publish base_footprint -> base_link transform
         t_base = TransformStamped()
         t_base.header.stamp = self.get_clock().now().to_msg()
         t_base.header.frame_id = 'base_footprint'
         t_base.child_frame_id = 'base_link'
         
-        # Simple forward motion
-        velocity = self.wheel_radius * self.omega_left
-        t_base.transform.translation.x = velocity * elapsed_time
+        # Fixed height offset
+        t_base.transform.translation.x = 0.0
         t_base.transform.translation.y = 0.0
-        t_base.transform.translation.z = 0.04
+        t_base.transform.translation.z = 0.05
         
         # No rotation
         q = transforms3d.euler.euler2quat(0, 0, 0)
@@ -111,6 +130,26 @@ class DronePublisher(Node):
         t_caster.transform.rotation.w = q_caster[0]
         
         self.tf_broadcaster.sendTransform(t_caster)
+        
+        # Publish base_link -> base_laser transform
+        t_laser = TransformStamped()
+        t_laser.header.stamp = self.get_clock().now().to_msg()
+        t_laser.header.frame_id = 'base_link'
+        t_laser.child_frame_id = 'base_laser'
+        
+        # Position above the base_link (on top of the robot)
+        t_laser.transform.translation.x = 0.0
+        t_laser.transform.translation.y = 0.0
+        t_laser.transform.translation.z = 0.08
+        
+        # No rotation
+        q_laser = transforms3d.euler.euler2quat(0, 0, 0)
+        t_laser.transform.rotation.x = q_laser[1]
+        t_laser.transform.rotation.y = q_laser[2]
+        t_laser.transform.rotation.z = q_laser[3]
+        t_laser.transform.rotation.w = q_laser[0]
+        
+        self.tf_broadcaster.sendTransform(t_laser)
         
         # Publish joint states
         joint_state = JointState()
