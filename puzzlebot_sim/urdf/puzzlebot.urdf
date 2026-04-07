@@ -50,6 +50,18 @@
     </visual>
   </link>
 
+  <link name="base_laser">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.04" length="0.02"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
   <joint name="base_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
@@ -74,6 +86,12 @@
     <parent link="base_link"/>
     <child link="caster_ball"/>
     <origin xyz="0.10 0 -0.03" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="base_laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_laser"/>
+    <origin xyz="0 0 0.08" rpy="0 0 0"/>
   </joint>
 
 </robot>

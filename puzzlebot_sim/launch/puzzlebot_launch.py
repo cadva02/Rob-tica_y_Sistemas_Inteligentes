@@ -40,8 +40,17 @@ def generate_launch_description():
         arguments=['-d', rviz_config]
     )
     
+    # RQT TF Tree
+    rqt_tf_tree = Node(
+        package='rqt_tf_tree',
+        executable='rqt_tf_tree',
+        name='rqt_tf_tree',
+        output='screen'
+    )
+    
     return LaunchDescription([
         robot_state_publisher,
         joint_state_publisher,
         rviz,
+        rqt_tf_tree,
     ])
