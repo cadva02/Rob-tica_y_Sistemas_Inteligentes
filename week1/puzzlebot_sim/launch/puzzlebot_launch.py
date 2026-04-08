@@ -11,6 +11,15 @@ def generate_launch_description():
     # Read URDF file
     with open(urdf_file, 'r') as infp:
         robot_desc = infp.read()
+
+    # Static Transform Publisher (map -> odom)
+    static_transform_map_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['--x', '0.0', '--y', '0.0', '--z', '0.0',
+                   '--yaw', '0.0', '--pitch', '0.0', '--roll', '0.0',
+                   '--frame-id', 'map', '--child-frame-id', 'odom']
+    )
     
     # Robot State Publisher (publishes URDF and TF)
     robot_state_publisher = Node(
@@ -47,8 +56,9 @@ def generate_launch_description():
         name='rqt_tf_tree',
         output='screen'
     )
-    
+        
     return LaunchDescription([
+        static_transform_map_odom,
         robot_state_publisher,
         joint_state_publisher,
         rviz,

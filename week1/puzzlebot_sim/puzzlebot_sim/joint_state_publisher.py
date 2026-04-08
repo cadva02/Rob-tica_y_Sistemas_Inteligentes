@@ -18,41 +18,24 @@ class DronePublisher(Node):
         self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
         
         # Create a Timer
-        timer_period = 0.05  # seconds (20 Hz)
+        timer_period = 0.05 
         self.timer = self.create_timer(timer_period, self.timer_cb)
         
         # Robot parameters
         self.start_time = self.get_clock().now()
-        self.wheel_radius = 0.035  # meters
-        self.wheel_separation = 0.16  # meters
+        self.wheel_radius = 0.035 
+        self.wheel_separation = 0.16  
         
         # Wheel angular velocities (rad/s)
-        self.omega_left = 2.0
-        self.omega_right = 2.0
+        self.omega_left = 1.5
+        self.omega_right = 2.5
 
     #Timer Callback
     def timer_cb(self):
         elapsed_time = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
         
-        # Publish map -> odom transform (static - represents map origin)
-        t_map = TransformStamped()
-        t_map.header.stamp = self.get_clock().now().to_msg()
-        t_map.header.frame_id = 'map'
-        t_map.child_frame_id = 'odom'
-        
-        # Map is offset from odom to show they are different frames
-        # In real robots, this would be updated by SLAM/localization
-        t_map.transform.translation.x = 0.5  # Negative offset (inverted relationship)
-        t_map.transform.translation.y = 0.5  # Negative offset (inverted relationship)
-        t_map.transform.translation.z = 0.0
-        
-        q_map = transforms3d.euler.euler2quat(0, 0, 0)
-        t_map.transform.rotation.x = q_map[1]
-        t_map.transform.rotation.y = q_map[2]
-        t_map.transform.rotation.z = q_map[3]
-        t_map.transform.rotation.w = q_map[0]
-        
-        self.tf_broadcaster.sendTransform(t_map)
+        # Static map -> odom transform is now published by the launch file
+        # This avoids conflicts between static_transform_publisher and this node
         
         # Publish odom -> base_footprint transform
         t_odom = TransformStamped()
@@ -60,16 +43,16 @@ class DronePublisher(Node):
         t_odom.header.frame_id = 'odom'
         t_odom.child_frame_id = 'base_footprint'
         
-        # Robot orbits around the map origin in odom frame
-        # The map is at (-0.5, -0.5) in odom frame (inverse of the map->odom transform)
+        # Robot orbits around the odom origin in odom frame
+        # The odom is now at (0, 0)
         
         radius = 0.5
         angular_velocity = 0.5  # rad/s
         angle = angular_velocity * elapsed_time
         
-        # Center of circle in odom frame (at map origin)
-        center_x = -0.5
-        center_y = -0.5
+        # Center of circle in odom frame (at odom origin)
+        center_x = 0.0
+        center_y = 0.0
         
         # Position on the circle
         t_odom.transform.translation.x = center_x + radius * np.cos(angle)
