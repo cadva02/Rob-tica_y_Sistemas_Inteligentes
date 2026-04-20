@@ -50,13 +50,24 @@ def generate_launch_description():
         executable='kinematic_simulator',
         name='puzzlebot_sim',
         output='screen',
+        parameters=[
+            params_file,
+            {'publish_tf': False},
+        ],
+    )
+
+    dead_reckoning_localization = Node(
+        package='kinematic_model',
+        executable='dead_reckoning_localization',
+        name='dead_reckoning_localization',
+        output='screen',
         parameters=[params_file],
     )
 
-    square_trajectory = Node(
+    triangle_trajectory = Node(
         package='kinematic_model',
-        executable='square_trajectory',
-        name='square_trajectory',
+        executable='triangle_trajectory',
+        name='triangle_trajectory',
         output='screen',
         parameters=[params_file],
     )
@@ -89,8 +100,8 @@ def generate_launch_description():
         name='rqt_plot',
         output='screen',
         arguments=[
-            '/pose_sim/pose/position/x',
-            '/pose_sim/pose/position/y',
+            '/odom/pose/pose/position/x',
+            '/odom/pose/pose/position/y',
             '/wr/data',
             '/wl/data',
         ],
@@ -101,7 +112,8 @@ def generate_launch_description():
         static_transform_map_odom,
         robot_state_publisher,
         kinematic_simulator,
-        square_trajectory,
+        dead_reckoning_localization,
+        triangle_trajectory,
         rviz,
         rqt_tf_tree,
         rqt_graph,

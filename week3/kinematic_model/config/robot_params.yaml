@@ -2,3 +2,74 @@ robot_state_publisher:
   ros__parameters:
     use_sim_time: false
     publish_frequency: 30.0
+
+puzzlebot_sim:
+  ros__parameters:
+    update_rate: 50.0
+    wheel_radius: 0.05
+    wheel_base: 0.19
+    x0: 0.0
+    y0: 0.0
+    theta0: 0.0
+    publish_tf: true
+
+dead_reckoning_localization:
+  ros__parameters:
+    wheel_radius: 0.05
+    wheel_base: 0.19
+    sample_time: 0.02
+    x0: 0.0
+    y0: 0.0
+    theta0: 0.0
+
+point_stabilizer:
+  ros__parameters:
+    control_rate: 30.0
+    goal_x: 0.8
+    goal_y: 0.8
+    goal_theta: 0.0
+    k_rho: 0.9
+    k_alpha: 2.0
+    k_beta: -0.6
+    v_max: 0.35
+    w_max: 1.5
+    position_tolerance: 0.03
+    angle_tolerance: 0.03
+
+control:
+  ros__parameters:
+    control_rate: 30.0
+    goal_x: 0.8
+    goal_y: 0.8
+    goal_theta: 0.0
+    k_rho: 0.9
+    k_alpha: 2.0
+    k_beta: -0.6
+    v_max: 0.35
+    w_max: 1.5
+    position_tolerance: 0.03
+    angle_tolerance: 0.03
+
+setpoint_generator:
+  ros__parameters:
+    publish_rate: 5.0
+    trajectory_type: square
+    side_length: 0.8
+    start_x: 0.0
+    start_y: 0.0
+
+square_trajectory:
+  ros__parameters:
+    control_rate: 30.0
+    linear_speed: 0.2
+    side_time: 4.0
+    turn_speed: 0.8
+    turn_time: 1.963495408
+
+triangle_trajectory:
+  ros__parameters:
+    control_rate: 30.0
+    linear_speed: 0.2
+    side_time: 4.0
+    turn_speed: 0.8
+    turn_time: 2.617993878

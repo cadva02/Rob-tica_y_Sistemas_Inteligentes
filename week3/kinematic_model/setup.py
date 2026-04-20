@@ -32,6 +32,13 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'kinematic_simulator = kinematic_model.kinematic_simulator:main',
+            'dead_reckoning_localization = kinematic_model.dead_reckoning_localization:main',
+            'point_stabilizer = kinematic_model.point_stabilizer:main',
+            'control = kinematic_model.control:main',
+            'setpoint_generator = kinematic_model.setpoint_generator:main',
+            'square_trajectory = kinematic_model.square_trajectory:main',
+            'triangle_trajectory = kinematic_model.triangle_trajectory:main',
         ],
     },
 )

@@ -45,18 +45,37 @@ def generate_launch_description():
         ],
     )
 
-    kinematic_simulator = Node(
+    puzzlebot_sim = Node(
         package='kinematic_model',
         executable='kinematic_simulator',
         name='puzzlebot_sim',
         output='screen',
+        parameters=[
+            params_file,
+            {'publish_tf': False},
+        ],
+    )
+
+    dead_reckoning_localization = Node(
+        package='kinematic_model',
+        executable='dead_reckoning_localization',
+        name='dead_reckoning_localization',
+        output='screen',
         parameters=[params_file],
     )
 
-    square_trajectory = Node(
+    control = Node(
         package='kinematic_model',
-        executable='square_trajectory',
-        name='square_trajectory',
+        executable='control',
+        name='control',
+        output='screen',
+        parameters=[params_file],
+    )
+
+    setpoint_generator = Node(
+        package='kinematic_model',
+        executable='setpoint_generator',
+        name='setpoint_generator',
         output='screen',
         parameters=[params_file],
     )
@@ -89,10 +108,11 @@ def generate_launch_description():
         name='rqt_plot',
         output='screen',
         arguments=[
-            '/pose_sim/pose/position/x',
-            '/pose_sim/pose/position/y',
-            '/wr/data',
-            '/wl/data',
+            '/odom/pose/pose/position/x',
+            '/odom/pose/pose/position/y',
+            '/set_point/x',
+            '/set_point/y',
+            '/goal_reached/data',
         ],
     )
 
@@ -100,8 +120,10 @@ def generate_launch_description():
         static_transform_world_map,
         static_transform_map_odom,
         robot_state_publisher,
-        kinematic_simulator,
-        square_trajectory,
+        puzzlebot_sim,
+        dead_reckoning_localization,
+        control,
+        setpoint_generator,
         rviz,
         rqt_tf_tree,
         rqt_graph,

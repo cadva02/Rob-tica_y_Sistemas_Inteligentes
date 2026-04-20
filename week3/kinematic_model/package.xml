@@ -3,15 +3,24 @@
 <package format="3">
   <name>kinematic_model</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Puzzlebot kinematic simulation with quaternion pose, wheel speeds, and square trajectory</description>
   <maintainer email="a01735818@tec.mx">adrian</maintainer>
   <license>Apache-2.0</license>
 
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>ros2launch</depend>
   <depend>robot_state_publisher</depend>
   <depend>tf2_ros</depend>
+  <depend>tf2_ros_py</depend>
+  <depend>python3-numpy</depend>
   <depend>rviz2</depend>
   <depend>rqt_tf_tree</depend>
+  <depend>rqt_graph</depend>
+  <depend>rqt_plot</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
