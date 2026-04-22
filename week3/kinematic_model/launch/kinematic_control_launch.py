@@ -64,10 +64,10 @@ def generate_launch_description():
         parameters=[params_file],
     )
 
-    control = Node(
+    point_stabilizer = Node(
         package='kinematic_model',
-        executable='control',
-        name='control',
+        executable='point_stabilizer',
+        name='point_stabilizer',
         output='screen',
         parameters=[params_file],
     )
@@ -112,7 +112,7 @@ def generate_launch_description():
             '/odom/pose/pose/position/y',
             '/set_point/x',
             '/set_point/y',
-            '/goal_reached/data',
+        
         ],
     )
 
@@ -122,7 +122,7 @@ def generate_launch_description():
         robot_state_publisher,
         puzzlebot_sim,
         dead_reckoning_localization,
-        control,
+        point_stabilizer,
         setpoint_generator,
         rviz,
         rqt_tf_tree,

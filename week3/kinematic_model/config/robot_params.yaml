@@ -5,7 +5,7 @@ robot_state_publisher:
 
 puzzlebot_sim:
   ros__parameters:
-    update_rate: 50.0
+    update_rate: 30.0
     wheel_radius: 0.05
     wheel_base: 0.19
     x0: 0.0
@@ -24,52 +24,37 @@ dead_reckoning_localization:
 
 point_stabilizer:
   ros__parameters:
+    # Frecuencia de ejecución (Hz)
     control_rate: 30.0
-    goal_x: 0.8
-    goal_y: 0.8
-    goal_theta: 0.0
-    k_rho: 0.9
-    k_alpha: 2.0
-    k_beta: -0.6
-    v_max: 0.35
-    w_max: 1.5
-    position_tolerance: 0.03
-    angle_tolerance: 0.03
 
-control:
-  ros__parameters:
-    control_rate: 30.0
-    goal_x: 0.8
-    goal_y: 0.8
+    # Metas iniciales (por si no recibe nada de inmediato)
+    goal_x: 1.0
+    goal_y: 0.5
     goal_theta: 0.0
-    k_rho: 0.9
-    k_alpha: 2.0
-    k_beta: -0.6
-    v_max: 0.35
-    w_max: 1.5
-    position_tolerance: 0.03
-    angle_tolerance: 0.03
+
+    # Ganancias PID para Velocidad Lineal (distancia)
+    kp_x: 0.5
+    ki_x: 0.1
+    kd_x: 0.2
+
+    # Ganancias PID para Velocidad Angular (orientación)
+    kp_theta: 0.8
+    ki_theta: 0.05
+    kd_theta: 0.3
+
+    # Límites de seguridad y tolerancias
+    v_max: 0.35              # Velocidad lineal máxima (m/s)
+    w_max: 1.5               # Velocidad angular máxima (rad/s)
+    position_tolerance: 0.03  # Error aceptable en metros (3cm)
+    angle_tolerance: 0.03     # Error aceptable en radianes
+
 
 setpoint_generator:
   ros__parameters:
-    publish_rate: 5.0
-    trajectory_type: square
-    side_length: 0.8
-    start_x: 0.0
-    start_y: 0.0
+    publish_rate: 5.0       
+    trajectory_type: "both"  
+    side_length: 0.8         # Tamaño del lado de la figura en metros
+    start_x: 0.0             # Coordenada X inicial
+    start_y: 0.0             # Coordenada Y inicial
 
-square_trajectory:
-  ros__parameters:
-    control_rate: 30.0
-    linear_speed: 0.2
-    side_time: 4.0
-    turn_speed: 0.8
-    turn_time: 1.963495408
 
-triangle_trajectory:
-  ros__parameters:
-    control_rate: 30.0
-    linear_speed: 0.2
-    side_time: 4.0
-    turn_speed: 0.8
-    turn_time: 2.617993878

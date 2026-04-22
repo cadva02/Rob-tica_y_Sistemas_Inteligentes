@@ -12,7 +12,7 @@ class DeadReckoningLocalization(Node):
     """Estimate robot pose from wr/wl wheel speeds (dead reckoning)."""
 
     def __init__(self) -> None:
-        super().__init__('dead_reckoning_localization')
+        super().__init__('localisation')
 
         self.declare_parameter('wheel_radius', 0.05)
         self.declare_parameter('wheel_base', 0.19)
@@ -21,13 +21,13 @@ class DeadReckoningLocalization(Node):
         self.declare_parameter('y0', 0.0)
         self.declare_parameter('theta0', 0.0)
 
-        self.wheel_radius = float(self.get_parameter('wheel_radius').value)
-        self.wheel_base = float(self.get_parameter('wheel_base').value)
-        self.sample_time = float(self.get_parameter('sample_time').value)
+        self.wheel_radius = float(self.get_parameter('wheel_radius').value)# type: ignore
+        self.wheel_base = float(self.get_parameter('wheel_base').value)# type: ignore
+        self.sample_time = float(self.get_parameter('sample_time').value)# type: ignore
 
-        self.x = float(self.get_parameter('x0').value)
-        self.y = float(self.get_parameter('y0').value)
-        self.theta = float(self.get_parameter('theta0').value)
+        self.x = float(self.get_parameter('x0').value)# type: ignore
+        self.y = float(self.get_parameter('y0').value)# type: ignore
+        self.theta = float(self.get_parameter('theta0').value)# type: ignore
 
         self.wr = 0.0
         self.wl = 0.0

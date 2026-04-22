@@ -23,7 +23,7 @@ def generate_launch_description():
     
     # Robot State Publisher (publishes URDF and TF)
     robot_state_publisher = Node(
-        package='robot_state_publisher',
+        package='   ',
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
