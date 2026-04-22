@@ -32,6 +32,8 @@ class PointStabilizer(Node):
         self.declare_parameter('w_max', 1.5)
         self.declare_parameter('position_tolerance', 0.03)
         self.declare_parameter('angle_tolerance', 0.03)
+        self.declare_parameter('heading_threshold', 0.35)
+        self.declare_parameter('large_distance_threshold', 0.35)
 
         self.goal_x = float(self.get_parameter('goal_x').value)  # type: ignore
         self.goal_y = float(self.get_parameter('goal_y').value)  # type: ignore
@@ -51,6 +53,8 @@ class PointStabilizer(Node):
         self.w_max = float(self.get_parameter('w_max').value)  # type: ignore
         self.position_tolerance = float(self.get_parameter('position_tolerance').value)  # type: ignore
         self.angle_tolerance = float(self.get_parameter('angle_tolerance').value)  # type: ignore
+        self.heading_threshold = float(self.get_parameter('heading_threshold').value)  # type: ignore
+        self.large_distance_threshold = float(self.get_parameter('large_distance_threshold').value)  # type: ignore
 
         self.x = 0.0
         self.y = 0.0
@@ -62,6 +66,7 @@ class PointStabilizer(Node):
         self.integral_error_theta = 0.0
         self.prev_error_x = 0.0
         self.prev_error_theta = 0.0
+        self.prev_heading_error = 0.0
 
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.error_pub = self.create_publisher(Vector3, 'pose_error', 10)
@@ -92,8 +97,14 @@ class PointStabilizer(Node):
         self.goal_x = float(msg.x)
         self.goal_y = float(msg.y)
         self.goal_theta = float(msg.z)
-        self.get_logger().debug(
-            f'New setpoint received: x={self.goal_x:.2f}, y={self.goal_y:.2f}, theta={self.goal_theta:.2f}'
+        # Reset PID errors when new setpoint arrives
+        self.integral_error_x = 0.0
+        self.integral_error_theta = 0.0
+        self.prev_error_x = 0.0
+        self.prev_error_theta = 0.0
+        self.prev_heading_error = 0.0
+        self.get_logger().info(
+            f'New setpoint received: ({self.goal_x:.2f}, {self.goal_y:.2f}, {self.goal_theta:.2f}) | Current pos: ({self.x:.2f}, {self.y:.2f})'
         )
 
     def control_loop(self) -> None:
@@ -106,11 +117,12 @@ class PointStabilizer(Node):
         # Distance error (setpoint for velocity)
         distance_error = math.hypot(dx, dy)
         
-        # Angle error (setpoint for angular velocity)
-        angle_error = self.normalize_angle(self.goal_theta - self.theta)
-        
-        # Direction to goal
+        # Heading required to face the current waypoint.
         direction_to_goal = math.atan2(dy, dx)
+        heading_error = self.normalize_angle(direction_to_goal - self.theta)
+
+        # Final orientation error, used only when we are close enough to the waypoint.
+        angle_error = self.normalize_angle(self.goal_theta - self.theta)
 
         cmd = Twist()
         goal_reached = False
@@ -122,44 +134,43 @@ class PointStabilizer(Node):
             self.integral_error_x = 0.0
             self.integral_error_theta = 0.0
             goal_reached = True
-            self.get_logger().info('Goal reached!')
+            self.get_logger().info(f'Goal reached! Distance: {distance_error:.3f}m, Angle error: {angle_error:.3f}rad')
         else:
-            # PID for linear velocity (distance error)
             dt = 1.0 / float(self.get_parameter('control_rate').value)  # type: ignore
-            
-            # Proportional term
-            p_x = self.kp_x * distance_error
-            
-            # Integral term (anti-windup)
-            self.integral_error_x += distance_error * dt
-            self.integral_error_x = max(min(self.integral_error_x, 1.0), -1.0)  # Clamp
-            i_x = self.ki_x * self.integral_error_x
-            
-            # Derivative term
-            d_error_x = (distance_error - self.prev_error_x) / dt if dt > 0 else 0.0
-            d_x = self.kd_x * d_error_x
-            self.prev_error_x = distance_error
-            
-            v = p_x + i_x + d_x
-            
-            # PID for angular velocity (angle error)
-            p_theta = self.kp_theta * angle_error
-            
-            # Integral term (anti-windup)
-            self.integral_error_theta += angle_error * dt
-            self.integral_error_theta = max(min(self.integral_error_theta, 1.0), -1.0)  # Clamp
-            i_theta = self.ki_theta * self.integral_error_theta
-            
-            # Derivative term
-            d_error_theta = (angle_error - self.prev_error_theta) / dt if dt > 0 else 0.0
-            d_theta = self.kd_theta * d_error_theta
-            self.prev_error_theta = angle_error
-            
-            w = p_theta + i_theta + d_theta
-            
-            # Saturate velocities
-            cmd.linear.x = max(min(v, self.v_max), -self.v_max)
-            cmd.angular.z = max(min(w, self.w_max), -self.w_max)
+
+            # If the waypoint is far away, stop and point directly to it first.
+            if distance_error > self.large_distance_threshold and abs(heading_error) > self.heading_threshold:
+                heading_derivative = (heading_error - self.prev_heading_error) / dt if dt > 0 else 0.0
+                w = self.kp_theta * heading_error + self.kd_theta * heading_derivative
+                self.prev_heading_error = heading_error
+                cmd.linear.x = 0.0
+                cmd.angular.z = max(min(w, self.w_max), -self.w_max)
+            elif distance_error > self.position_tolerance and abs(heading_error) > self.heading_threshold:
+                heading_derivative = (heading_error - self.prev_heading_error) / dt if dt > 0 else 0.0
+                w = self.kp_theta * heading_error + self.kd_theta * heading_derivative
+                self.prev_heading_error = heading_error
+                cmd.linear.x = 0.0
+                cmd.angular.z = max(min(w, self.w_max), -self.w_max)
+            elif distance_error > self.position_tolerance:
+                # Move forward once aligned; keep a small heading correction while advancing.
+                distance_derivative = (distance_error - self.prev_error_x) / dt if dt > 0 else 0.0
+                heading_derivative = (heading_error - self.prev_heading_error) / dt if dt > 0 else 0.0
+
+                v = self.kp_x * distance_error + self.kd_x * distance_derivative
+                w = self.kp_theta * heading_error + self.kd_theta * heading_derivative
+
+                self.prev_error_x = distance_error
+                self.prev_heading_error = heading_error
+
+                cmd.linear.x = max(min(v, self.v_max), 0.0)
+                cmd.angular.z = max(min(w, self.w_max), -self.w_max)
+            else:
+                # Close to the waypoint position: only correct the final orientation.
+                angle_derivative = (angle_error - self.prev_error_theta) / dt if dt > 0 else 0.0
+                w = self.kp_theta * angle_error + self.kd_theta * angle_derivative
+                self.prev_error_theta = angle_error
+                cmd.linear.x = 0.0
+                cmd.angular.z = max(min(w, self.w_max), -self.w_max)
 
         err = Vector3()
         err.x = self.goal_x - self.x

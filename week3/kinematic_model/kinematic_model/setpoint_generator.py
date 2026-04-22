@@ -74,8 +74,9 @@ class SetPointGenerator(Node):
         """Called when goal is reached. Move to next waypoint."""
         if msg.data and not self.last_reached:
             self.current_index = (self.current_index + 1) % len(self.points)
+            x, y, theta = self.points[self.current_index]
             self.get_logger().info(
-                f'Goal reached! Moving to waypoint {self.current_index}/{len(self.points)}'
+                f'Goal reached! Moving to waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
             )
         self.last_reached = msg.data
 

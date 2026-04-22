@@ -33,25 +33,25 @@ point_stabilizer:
     goal_theta: 0.0
 
     # Ganancias PID para Velocidad Lineal (distancia)
-    kp_x: 0.5
-    ki_x: 0.1
-    kd_x: 0.2
+    kp_x: 0.1
+    ki_x: 0.0
+    kd_x: 0.02
 
     # Ganancias PID para Velocidad Angular (orientación)
-    kp_theta: 0.8
-    ki_theta: 0.05
-    kd_theta: 0.3
+    kp_theta: 0.15
+    ki_theta: 0.0
+    kd_theta: 0.05
 
     # Límites de seguridad y tolerancias
     v_max: 0.35              # Velocidad lineal máxima (m/s)
     w_max: 1.5               # Velocidad angular máxima (rad/s)
-    position_tolerance: 0.03  # Error aceptable en metros (3cm)
-    angle_tolerance: 0.03     # Error aceptable en radianes
+    position_tolerance: 0.08  # Error aceptable en metros (8cm)
+    angle_tolerance: 0.05     # Error aceptable en radianes (~3deg)
 
 
 setpoint_generator:
   ros__parameters:
-    publish_rate: 5.0       
+    publish_rate: 10.0       
     trajectory_type: "both"  
     side_length: 0.8         # Tamaño del lado de la figura en metros
     start_x: 0.0             # Coordenada X inicial
