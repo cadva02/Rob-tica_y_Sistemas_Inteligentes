@@ -1,5 +1,4 @@
 import math
-
 import rclpy
 from geometry_msgs.msg import PoseStamped, TransformStamped, Twist
 from rclpy.node import Node
@@ -9,7 +8,6 @@ from tf2_ros import TransformBroadcaster
 
 
 class KinematicSimulator(Node):
-    """Puzzlebot kinematic model node for Mini Challenge 2."""
 
     def __init__(self) -> None:
         # Required node name from challenge statement.
@@ -23,14 +21,14 @@ class KinematicSimulator(Node):
         self.declare_parameter('theta0', 0.0)
         self.declare_parameter('publish_tf', True)
 
-        self.update_rate = float(self.get_parameter('update_rate').value)
-        self.wheel_radius = float(self.get_parameter('wheel_radius').value)
-        self.wheel_base = float(self.get_parameter('wheel_base').value)
+        self.update_rate: float = float(self.get_parameter('update_rate').value)  # type: ignore
+        self.wheel_radius: float = float(self.get_parameter('wheel_radius').value)  # type: ignore
+        self.wheel_base: float = float(self.get_parameter('wheel_base').value)  # type: ignore
 
-        self.x = float(self.get_parameter('x0').value)
-        self.y = float(self.get_parameter('y0').value)
-        self.theta = float(self.get_parameter('theta0').value)
-        self.publish_tf = bool(self.get_parameter('publish_tf').value)
+        self.x: float = float(self.get_parameter('x0').value)  # type: ignore
+        self.y: float = float(self.get_parameter('y0').value)  # type: ignore
+        self.theta: float = float(self.get_parameter('theta0').value)  # type: ignore
+        self.publish_tf: bool = bool(self.get_parameter('publish_tf').value)  # type: ignore
 
         self.linear_cmd = 0.0
         self.angular_cmd = 0.0

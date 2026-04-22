@@ -64,10 +64,10 @@ def generate_launch_description():
         parameters=[params_file],
     )
 
-    control = Node(
+    point_stabilizer = Node(
         package='kinematic_model',
-        executable='control',
-        name='control',
+        executable='point_stabilizer',
+        name='point_stabilizer',
         output='screen',
         parameters=[params_file],
     )
@@ -102,17 +102,31 @@ def generate_launch_description():
         output='screen',
     )
 
-    rqt_plot = Node(
+    rqt_plot_pose = Node(
         package='rqt_plot',
         executable='rqt_plot',
-        name='rqt_plot',
+        name='rqt_plot_pose',
         output='screen',
         arguments=[
+            '/next_point/x',
+            '/next_point/y',
+            '/pose_sim/pose/position/x',
+            '/pose_sim/pose/position/y',
             '/odom/pose/pose/position/x',
             '/odom/pose/pose/position/y',
-            '/set_point/x',
-            '/set_point/y',
-            '/goal_reached/data',
+        ],
+    )
+
+    rqt_plot_vel = Node(
+        package='rqt_plot',
+        executable='rqt_plot',
+        name='rqt_plot_vel',
+        output='screen',
+        arguments=[
+            '/cmd_vel/linear/x',
+            '/cmd_vel/angular/z',
+            '/odom/twist/twist/linear/x',
+            '/odom/twist/twist/angular/z',
         ],
     )
 
@@ -122,10 +136,11 @@ def generate_launch_description():
         robot_state_publisher,
         puzzlebot_sim,
         dead_reckoning_localization,
-        control,
+        point_stabilizer,
         setpoint_generator,
         rviz,
         rqt_tf_tree,
         rqt_graph,
-        rqt_plot,
+        rqt_plot_pose,
+        rqt_plot_vel,
     ])
