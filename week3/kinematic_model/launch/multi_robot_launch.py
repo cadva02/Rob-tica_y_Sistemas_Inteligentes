@@ -4,11 +4,13 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
     package_dir = get_package_share_directory('kinematic_model')
     robot_group_launch = os.path.join(package_dir, 'launch', 'robot_group_launch.py')
+    rviz_config = os.path.join(package_dir, 'rviz', 'puzzlebot_rviz.rviz')
 
     robot1 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(robot_group_launch),
@@ -38,7 +40,16 @@ def generate_launch_description():
         }.items(),
     )
 
+    rviz = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', rviz_config],
+    )
+
     return LaunchDescription([
         robot1,
         robot2,
+        rviz,
     ])
