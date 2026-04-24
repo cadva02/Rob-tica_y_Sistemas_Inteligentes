@@ -20,14 +20,19 @@ class DeadReckoningLocalization(Node):
         self.declare_parameter('x0', 0.0)
         self.declare_parameter('y0', 0.0)
         self.declare_parameter('theta0', 0.0)
+        self.declare_parameter('odom_frame', 'odom')
+        self.declare_parameter('base_frame', 'base_footprint')
 
-        self.wheel_radius = float(self.get_parameter('wheel_radius').value)# type: ignore
-        self.wheel_base = float(self.get_parameter('wheel_base').value)# type: ignore
-        self.sample_time = float(self.get_parameter('sample_time').value)# type: ignore
+        self.wheel_radius = float(self.get_parameter('wheel_radius').value)  # type: ignore
+        self.wheel_base = float(self.get_parameter('wheel_base').value)  # type: ignore
+        self.sample_time = float(self.get_parameter('sample_time').value)  # type: ignore
 
-        self.x = float(self.get_parameter('x0').value)# type: ignore
-        self.y = float(self.get_parameter('y0').value)# type: ignore
-        self.theta = float(self.get_parameter('theta0').value)# type: ignore
+        self.x = float(self.get_parameter('x0').value)  # type: ignore
+        self.y = float(self.get_parameter('y0').value)  # type: ignore
+        self.theta = float(self.get_parameter('theta0').value)  # type: ignore
+
+        self.odom_frame = str(self.get_parameter('odom_frame').value)  # type: ignore
+        self.base_frame = str(self.get_parameter('base_frame').value)  # type: ignore
 
         self.wr = 0.0
         self.wl = 0.0
@@ -38,6 +43,11 @@ class DeadReckoningLocalization(Node):
         self.wl_sub = self.create_subscription(Float32, 'wl', self.wl_cb, 10)
 
         self.timer = self.create_timer(self.sample_time, self.timer_cb)
+
+        self.get_logger().info(
+            f'Dead reckoning localisation started | odom_frame={self.odom_frame}, '
+            f'base_frame={self.base_frame}'
+        )
 
     @staticmethod
     def normalize_angle(angle: float) -> float:
@@ -68,8 +78,8 @@ class DeadReckoningLocalization(Node):
 
         tf_msg = TransformStamped()
         tf_msg.header.stamp = stamp
-        tf_msg.header.frame_id = 'odom'
-        tf_msg.child_frame_id = 'base_footprint'
+        tf_msg.header.frame_id = self.odom_frame
+        tf_msg.child_frame_id = self.base_frame
         tf_msg.transform.translation.x = self.x
         tf_msg.transform.translation.y = self.y
         tf_msg.transform.translation.z = 0.0
@@ -81,8 +91,8 @@ class DeadReckoningLocalization(Node):
 
         odom = Odometry()
         odom.header.stamp = stamp
-        odom.header.frame_id = 'odom'
-        odom.child_frame_id = 'base_footprint'
+        odom.header.frame_id = self.odom_frame
+        odom.child_frame_id = self.base_frame
 
         odom.pose.pose.position.x = self.x
         odom.pose.pose.position.y = self.y
@@ -93,6 +103,10 @@ class DeadReckoningLocalization(Node):
         odom.pose.pose.orientation.w = qw
 
         odom.twist.twist.linear.x = v
+        odom.twist.twist.linear.y = 0.0
+        odom.twist.twist.linear.z = 0.0
+        odom.twist.twist.angular.x = 0.0
+        odom.twist.twist.angular.y = 0.0
         odom.twist.twist.angular.z = w
 
         self.odom_pub.publish(odom)

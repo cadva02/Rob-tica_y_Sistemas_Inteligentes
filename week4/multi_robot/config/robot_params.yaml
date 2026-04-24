@@ -1,0 +1,60 @@
+robot_state_publisher:
+  ros__parameters:
+    use_sim_time: false
+    publish_frequency: 30.0
+
+puzzlebot_sim:
+  ros__parameters:
+    update_rate: 30.0
+    wheel_radius: 0.05
+    wheel_base: 0.19
+    x0: 0.0
+    y0: 0.0
+    theta0: 0.0
+    publish_tf: true
+
+dead_reckoning_localization:
+  ros__parameters:
+    wheel_radius: 0.05
+    wheel_base: 0.19
+    sample_time: 0.02
+    x0: 0.0
+    y0: 0.0
+    theta0: 0.0
+
+point_stabilizer:
+  ros__parameters:
+    # Frecuencia de ejecución (Hz)
+    control_rate: 30.0
+
+    # Metas iniciales (por si no recibe nada de inmediato)
+    goal_x: 1.0
+    goal_y: 0.5
+    goal_theta: 0.0
+
+    # Ganancias PID para Velocidad Lineal (distancia)
+    kp_x: 0.1
+    ki_x: 0.0
+    kd_x: 0.02
+
+    # Ganancias PID para Velocidad Angular (orientación)
+    kp_theta: 0.15
+    ki_theta: 0.0
+    kd_theta: 0.05
+
+    # Límites de seguridad y tolerancias
+    v_max: 0.35              # Velocidad lineal máxima (m/s)
+    w_max: 1.5               # Velocidad angular máxima (rad/s)
+    position_tolerance: 0.08  # Error aceptable en metros (8cm)
+    angle_tolerance: 0.05     # Error aceptable en radianes (~3deg)
+
+
+setpoint_generator:
+  ros__parameters:
+    publish_rate: 10.0       
+    trajectory_type: "both"  
+    side_length: 0.8         # Tamaño del lado de la figura en metros
+    start_x: 0.0             # Coordenada X inicial
+    start_y: 0.0             # Coordenada Y inicial
+
+

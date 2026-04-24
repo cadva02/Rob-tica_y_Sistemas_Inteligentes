@@ -1,4 +1,5 @@
 import math
+
 import rclpy
 from geometry_msgs.msg import PoseStamped, TransformStamped, Twist
 from rclpy.node import Node
@@ -10,7 +11,6 @@ from tf2_ros import TransformBroadcaster
 class KinematicSimulator(Node):
 
     def __init__(self) -> None:
-        # Required node name from challenge statement.
         super().__init__('puzzlebot_sim')
 
         self.declare_parameter('update_rate', 50.0)
@@ -20,15 +20,25 @@ class KinematicSimulator(Node):
         self.declare_parameter('y0', 0.0)
         self.declare_parameter('theta0', 0.0)
         self.declare_parameter('publish_tf', True)
+        self.declare_parameter('publish_joint_states', True)
+        self.declare_parameter('odom_frame', 'odom')
+        self.declare_parameter('base_frame', 'base_footprint')
+        self.declare_parameter('pose_frame', 'odom')
 
-        self.update_rate: float = float(self.get_parameter('update_rate').value)  # type: ignore
-        self.wheel_radius: float = float(self.get_parameter('wheel_radius').value)  # type: ignore
-        self.wheel_base: float = float(self.get_parameter('wheel_base').value)  # type: ignore
+        self.update_rate = float(self.get_parameter('update_rate').value)  # type: ignore
+        self.wheel_radius = float(self.get_parameter('wheel_radius').value)  # type: ignore
+        self.wheel_base = float(self.get_parameter('wheel_base').value)  # type: ignore
 
-        self.x: float = float(self.get_parameter('x0').value)  # type: ignore
-        self.y: float = float(self.get_parameter('y0').value)  # type: ignore
-        self.theta: float = float(self.get_parameter('theta0').value)  # type: ignore
-        self.publish_tf: bool = bool(self.get_parameter('publish_tf').value)  # type: ignore
+        self.x = float(self.get_parameter('x0').value)  # type: ignore
+        self.y = float(self.get_parameter('y0').value)  # type: ignore
+        self.theta = float(self.get_parameter('theta0').value)  # type: ignore
+
+        self.publish_tf = bool(self.get_parameter('publish_tf').value)  # type: ignore
+        self.publish_joint_states = bool(self.get_parameter('publish_joint_states').value)  # type: ignore
+
+        self.odom_frame = str(self.get_parameter('odom_frame').value)  # type: ignore
+        self.base_frame = str(self.get_parameter('base_frame').value)  # type: ignore
+        self.pose_frame = str(self.get_parameter('pose_frame').value)  # type: ignore
 
         self.linear_cmd = 0.0
         self.angular_cmd = 0.0
@@ -41,12 +51,21 @@ class KinematicSimulator(Node):
         self.pose_pub = self.create_publisher(PoseStamped, 'pose_sim', 10)
         self.wr_pub = self.create_publisher(Float32, 'wr', 10)
         self.wl_pub = self.create_publisher(Float32, 'wl', 10)
-        self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
+
+        self.joint_pub = None
+        if self.publish_joint_states:
+            self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
 
         self.cmd_sub = self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_cb, 10)
 
         timer_period = 1.0 / self.update_rate
         self.timer = self.create_timer(timer_period, self.timer_cb)
+
+        self.get_logger().info(
+            f'Kinematic simulator started | odom_frame={self.odom_frame}, '
+            f'base_frame={self.base_frame}, pose_frame={self.pose_frame}, '
+            f'publish_tf={self.publish_tf}, publish_joint_states={self.publish_joint_states}'
+        )
 
     @staticmethod
     def normalize_angle(angle: float) -> float:
@@ -63,7 +82,6 @@ class KinematicSimulator(Node):
             return
         self.last_time = now
 
-        # Nonholonomic model: x_dot=v*cos(theta), y_dot=v*sin(theta), theta_dot=w.
         self.x += self.linear_cmd * math.cos(self.theta) * dt
         self.y += self.linear_cmd * math.sin(self.theta) * dt
         self.theta = self.normalize_angle(self.theta + self.angular_cmd * dt)
@@ -80,7 +98,6 @@ class KinematicSimulator(Node):
         self.right_wheel_angle += omega_right * dt
         self.left_wheel_angle += omega_left * dt
 
-        # Quaternion from yaw using basic trigonometry (no external quaternion library).
         half_yaw = 0.5 * self.theta
         qx = 0.0
         qy = 0.0
@@ -90,7 +107,7 @@ class KinematicSimulator(Node):
 
         pose_msg = PoseStamped()
         pose_msg.header.stamp = stamp
-        pose_msg.header.frame_id = 'odom'
+        pose_msg.header.frame_id = self.pose_frame
         pose_msg.pose.position.x = self.x
         pose_msg.pose.position.y = self.y
         pose_msg.pose.position.z = 0.0
@@ -103,8 +120,8 @@ class KinematicSimulator(Node):
         if self.publish_tf:
             tf_msg = TransformStamped()
             tf_msg.header.stamp = stamp
-            tf_msg.header.frame_id = 'odom'
-            tf_msg.child_frame_id = 'base_footprint'
+            tf_msg.header.frame_id = self.odom_frame
+            tf_msg.child_frame_id = self.base_frame
             tf_msg.transform.translation.x = self.x
             tf_msg.transform.translation.y = self.y
             tf_msg.transform.translation.z = 0.0
@@ -122,12 +139,13 @@ class KinematicSimulator(Node):
         wl_msg.data = float(omega_left)
         self.wl_pub.publish(wl_msg)
 
-        joint_msg = JointState()
-        joint_msg.header.stamp = stamp
-        joint_msg.name = ['wheel_left_joint', 'wheel_right_joint']
-        joint_msg.position = [self.left_wheel_angle, self.right_wheel_angle]
-        joint_msg.velocity = [omega_left, omega_right]
-        self.joint_pub.publish(joint_msg)
+        if self.publish_joint_states and self.joint_pub is not None:
+            joint_msg = JointState()
+            joint_msg.header.stamp = stamp
+            joint_msg.name = ['wheel_left_joint', 'wheel_right_joint']
+            joint_msg.position = [self.left_wheel_angle, self.right_wheel_angle]
+            joint_msg.velocity = [omega_left, omega_right]
+            self.joint_pub.publish(joint_msg)
 
 
 def main(args=None) -> None:

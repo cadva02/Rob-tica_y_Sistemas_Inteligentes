@@ -8,7 +8,7 @@ from launch_ros.actions import Node, PushRosNamespace
 
 
 def generate_launch_description():
-    package_dir = get_package_share_directory('kinematic_model')
+    package_dir = get_package_share_directory('multi_robot')
     urdf_file = os.path.join(package_dir, 'urdf', 'puzzlebot.urdf')
     params_file = os.path.join(package_dir, 'config', 'robot_params.yaml')
 
@@ -68,7 +68,7 @@ def generate_launch_description():
             ),
 
             Node(
-                package='kinematic_model',
+                package='multi_robot',
                 executable='kinematic_simulator',
                 name='puzzlebot_sim',
                 output='screen',
@@ -86,7 +86,7 @@ def generate_launch_description():
             ),
 
             Node(
-                package='kinematic_model',
+                package='multi_robot',
                 executable='dead_reckoning_localization',
                 name='dead_reckoning_localization',
                 output='screen',
@@ -101,7 +101,7 @@ def generate_launch_description():
             ),
 
             Node(
-                package='kinematic_model',
+                package='multi_robot',
                 executable='point_stabilizer',
                 name='point_stabilizer',
                 output='screen',
@@ -109,7 +109,7 @@ def generate_launch_description():
             ),
 
             Node(
-                package='kinematic_model',
+                package='multi_robot',
                 executable='setpoint_generator',
                 name='setpoint_generator',
                 output='screen',
@@ -123,7 +123,7 @@ def generate_launch_description():
             ),
 
             Node(
-                package='kinematic_model',
+                package='multi_robot',
                 executable='joint_state_publisher',
                 name='joint_state_publisher',
                 output='screen',
