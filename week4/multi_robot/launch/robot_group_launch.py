@@ -8,6 +8,19 @@ from launch_ros.actions import Node, PushRosNamespace
 
 
 def generate_launch_description():
+        """Create and return the LaunchDescription for a namespaced puzzlebot simulation.
+    
+        This launch description:
+        - Locates the multi_robot package resources (URDF and parameters)
+        - Declares launch arguments for robot namespace, initial pose, and trajectory settings
+        - Loads the robot URDF into the robot_description parameter
+        - Applies a ROS 2 namespace to all spawned nodes
+        - Starts TF, state publishers, simulator, localization, controller, and setpoint generator
+    
+        Returns:
+            launch.LaunchDescription: Configured launch description for a single puzzlebot instance.
+        """
+    
     package_dir = get_package_share_directory('multi_robot')
     urdf_file = os.path.join(package_dir, 'urdf', 'puzzlebot.urdf')
     params_file = os.path.join(package_dir, 'config', 'robot_params.yaml')
