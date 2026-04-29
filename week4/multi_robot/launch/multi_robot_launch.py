@@ -8,6 +8,17 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+        """Create and return the launch description for the multi-robot setup.
+    
+        This launch description starts two puzzlebot robots with different
+        trajectories, launches RViz with a predefined configuration, and
+        starts several RQT tools for TF tree visualization, node graph
+        inspection, and plotting robot poses and velocities.
+    
+        Returns:
+            LaunchDescription: The configured launch description containing
+            all nodes and included launch files.
+        """
     package_dir = get_package_share_directory('multi_robot')
     robot_group_launch = os.path.join(package_dir, 'launch', 'robot_group_launch.py')
     rviz_config = os.path.join(package_dir, 'rviz', 'puzzlebot_rviz.rviz')
