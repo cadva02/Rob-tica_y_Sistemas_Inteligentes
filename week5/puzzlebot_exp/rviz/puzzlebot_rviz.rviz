@@ -89,8 +89,53 @@ Visualization Manager:
       Mass Properties:
         Inertia: false
         Mass: false
-      Name: RobotModel White
+      Name: Simulated Robot
       TF Prefix: robot1
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/week5/puzzlebot_exp/urdf/puzzlebot_yellow.urdf
+      Description Source: File
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_laser:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        caster_ball:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        left_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        right_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: Real Robot
+      TF Prefix: robot1_real
       Update Interval: 0
       Value: true
       Visual Enabled: true
@@ -158,7 +203,7 @@ Visualization Manager:
         Value: true
       Enabled: true
       Keep: 1
-      Name: Odom Covariance
+      Name: Simulated Robot Covariance
       Position Tolerance: 0.10000000149011612
       Shape:
         Alpha: 1
@@ -177,6 +222,44 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /robot1/odom
       Value: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz_default_plugins/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.30000001192092896
+          Color: 127; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 0
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.4000000059604645
+          Color: 51; 204; 51
+          Scale: 1.5
+          Value: true
+        Value: true
+      Enabled: true
+      Keep: 1
+      Name: Real Robot Covariance
+      Position Tolerance: 0.10000000149011612
+      Shape:
+        Alpha: 1
+        Axes Length: 0.5
+        Axes Radius: 0.10000000149011612
+        Color: 0; 200; 0
+        Head Length: 0.30000001192092896
+        Head Radius: 0.10000000149011612
+        Shaft Length: 1
+        Shaft Radius: 0.05000000074505806
+        Value: Axes
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot1_real/odom
+      Value: true
     - Alpha: 1
       Class: rviz_default_plugins/MarkerArray
       Enabled: true
@@ -191,7 +274,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: robot1/odom
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
