@@ -24,6 +24,12 @@ class ObstacleAvoidanceBug0(Node):
         self.declare_parameter('obstacle_distance', 0.40) # Umbral frontal (40 cm)
         self.declare_parameter('wall_dist_target', 0.35)   # Distancia deseada a la pared derecha (35 cm)
         self.declare_parameter('front_angle', 40.0)
+        # Control parameters for smoother wall-following
+        self.declare_parameter('kp_wall', 1.0)
+        self.declare_parameter('wall_ang_limit', 0.8)
+        # Parameters for obstacle detection smoothing and suppression
+        self.declare_parameter('obstacle_detection_count', 3)
+        self.declare_parameter('wall_exit_suppression', 1.0)
         
         # Nombres de tópicos según tu arquitectura
         self.declare_parameter('scan_topic', 'scan')
@@ -52,6 +58,8 @@ class ObstacleAvoidanceBug0(Node):
         self.goal_topic = str(self.get_parameter('goal_topic').value)
         self.odom_topic = str(self.get_parameter('odom_topic').value)
         self.publish_rate = float(self.get_parameter('publish_rate').value)
+        self.obstacle_detection_count = int(self.get_parameter('obstacle_detection_count').value)
+        self.wall_exit_suppression = float(self.get_parameter('wall_exit_suppression').value)
 
         # --- ESTADO INTERNO DEL ROBOT ---
         self.x = 0.0
@@ -65,10 +73,18 @@ class ObstacleAvoidanceBug0(Node):
         # Estados Bug 0: 'GIRAR_HACIA_META', 'AVANZAR_A_META', 'WALL_FOLLOWING'
         self.state = 'GIRAR_HACIA_META'
         self.hit_distance = float('inf')
+        # smoothing state for wall following
+        self.prev_angular = 0.0
+        self.kp_wall = float(self.get_parameter('kp_wall').value)
+        self.wall_ang_limit = float(self.get_parameter('wall_ang_limit').value)
+        # smoothing for obstacle detection
+        self.obstacle_ahead_count = 0
+        self.last_wall_exit_time = -1e9
 
         # --- PUBLICADORES Y SUSCRIPTORES ---
         self.cmd_pub = self.create_publisher(Twist, self.cmd_vel_topic, 10)
-        self.goal_reached_pub = self.create_publisher(Bool, '/goal_reached', 10)
+        # use relative topic name so other nodes receive it in same namespace
+        self.goal_reached_pub = self.create_publisher(Bool, 'goal_reached', 10)
         
         self.scan_sub = self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 10)
         self.goal_sub = self.create_subscription(Vector3, self.goal_topic, self.goal_callback, 10)
@@ -83,9 +99,22 @@ class ObstacleAvoidanceBug0(Node):
         return math.atan2(math.sin(angle), math.cos(angle))
 
     def goal_callback(self, msg: Vector3) -> None:
-        self.goal_x = float(msg.x)
-        self.goal_y = float(msg.y)
-        self.goal_theta = float(msg.z)
+        # Only accept a new goal if it's meaningfully different from the current one
+        new_x = float(msg.x)
+        new_y = float(msg.y)
+        new_theta = float(msg.z)
+
+        dist = math.hypot(new_x - self.goal_x, new_y - self.goal_y)
+        ang_diff = abs(self.normalize_angle(new_theta - self.goal_theta))
+
+        # thresholds: 1 cm position, ~0.01 rad orientation
+        if dist < 0.01 and ang_diff < 0.01:
+            # duplicate/unchanged setpoint -- ignore to avoid resetting state repeatedly
+            return
+
+        self.goal_x = new_x
+        self.goal_y = new_y
+        self.goal_theta = new_theta
         self.have_goal = True
         self.goal_reached = False
         self.state = 'GIRAR_HACIA_META'
@@ -138,7 +167,20 @@ class ObstacleAvoidanceBug0(Node):
             return
 
         # Evaluación de obstáculos usando el LiDAR
-        obstacle_ahead = self.is_obstacle_ahead()
+        # Smooth obstacle detection: require consecutive detections to flip state
+        obstacle_ahead_raw = self.is_obstacle_ahead()
+        if obstacle_ahead_raw:
+            self.obstacle_ahead_count = min(self.obstacle_detection_count, self.obstacle_ahead_count + 1)
+        else:
+            # decay counter slowly to avoid flip-flopping
+            self.obstacle_ahead_count = max(0, self.obstacle_ahead_count - 1)
+
+        obstacle_ahead = self.obstacle_ahead_count >= self.obstacle_detection_count
+
+        # Suppress re-entering wall-following for a short time after exit
+        now = self.get_clock().now().nanoseconds / 1e9
+        if (now - self.last_wall_exit_time) < self.wall_exit_suppression and self.state != 'WALL_FOLLOWING':
+            obstacle_ahead = False
 
         # --- MÁQUINA DE ESTADOS BUG 0 ---
         if self.state == 'GIRAR_HACIA_META':
@@ -176,6 +218,8 @@ class ObstacleAvoidanceBug0(Node):
                 self.get_logger().info('[BUG 0] Escape válido. Volviendo a orientarse a la meta.')
                 self.state = 'GIRAR_HACIA_META'
                 self.hit_distance = float('inf')
+                # record wall exit time to avoid immediate re-entry
+                self.last_wall_exit_time = now
                 
                 # Giro inmediato para romper inercia de la pared
                 cmd.linear.x = 0.0
@@ -251,26 +295,38 @@ class ObstacleAvoidanceBug0(Node):
         vals_right = vals_right[(vals_right > 0.02) & np.isfinite(vals_right)]
         scan_right = float(np.min(vals_right)) if len(vals_right) > 0 else float('inf')
 
-        # COMPORTAMIENTO REACTIVO DE SEGUIMIENTO (Flanco Derecho)
+        # SMOOTHED WALL-FOLLOWING (right-side)
         frente_libre = scan_front > self.obstacle_distance
 
         if not frente_libre:
-            # Muro directo al frente: Detener avance lineal y pivotar rápido a la izquierda
+            # Obstacle directly ahead: stop and pivot left to avoid
             twist.linear.x = 0.0
             twist.angular.z = self.angular_speed
         else:
-            # Frente despejado: Avanza y corrige trayectoria con histéresis discreta
-            twist.linear.x = self.linear_speed * 0.8  # Reducción controlada en curvas
-            
-            if scan_right > (self.wall_dist_target + 0.06):
-                # Se aleja de la pared derecha -> Cerrarse a la derecha (-)
-                twist.angular.z = -self.angular_speed * 0.5
-            elif scan_right < (self.wall_dist_target - 0.06):
-                # Se pega demasiado a la pared derecha -> Abrirse a la izquierda (+)
-                twist.angular.z = self.angular_speed * 0.5
+            # If we have a finite distance to the right wall, use P-control
+            if math.isfinite(scan_right):
+                error = scan_right - self.wall_dist_target
+                ang = -self.kp_wall * error
             else:
-                # En margen ideal de costeo
-                twist.angular.z = 0.0
+                # No wall detected: gently steer right to re-acquire it
+                ang = -0.3
+
+            # Limit and smooth angular velocity to avoid jitter
+            ang = max(min(ang, self.wall_ang_limit), -self.wall_ang_limit)
+            ang = 0.4 * ang + 0.6 * self.prev_angular
+            self.prev_angular = ang
+
+            # Forward speed reduced when turning sharply or if front is near
+            if abs(ang) > 0.45:
+                lin = self.linear_speed * 0.45
+            else:
+                lin = self.linear_speed * 0.85
+
+            if scan_front < (self.obstacle_distance + 0.05):
+                lin *= 0.5
+
+            twist.linear.x = max(0.0, min(lin, self.linear_speed))
+            twist.angular.z = ang
 
         return twist
 

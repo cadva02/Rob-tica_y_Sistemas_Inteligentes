@@ -77,7 +77,8 @@ class ObstacleAvoidanceBug2(Node):
 
         # --- PUBLICADORES Y SUSCRIPTORES ---
         self.cmd_pub = self.create_publisher(Twist, self.cmd_vel_topic, 10)
-        self.goal_reached_pub = self.create_publisher(Bool, '/goal_reached', 10)
+        # Use relative topic name so it matches other nodes/subscriptions
+        self.goal_reached_pub = self.create_publisher(Bool, 'goal_reached', 10)
         
         self.scan_sub = self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 10)
         self.goal_sub = self.create_subscription(Vector3, self.goal_topic, self.goal_callback, 10)

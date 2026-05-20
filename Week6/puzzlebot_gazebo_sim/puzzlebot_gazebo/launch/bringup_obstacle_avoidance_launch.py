@@ -10,14 +10,14 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Launch arguments
     declare_world_arg = DeclareLaunchArgument(
-        'world', default_value='empty.world',
+        'world', default_value='obstacle_avoidance_2.world',
         description='Gazebo world file to load'
     )
 
     declare_robot_name_arg = DeclareLaunchArgument('robot_name', default_value='Puzzlebot1')
     declare_robot_arg = DeclareLaunchArgument('robot', default_value='puzzlebot_jetson_lidar_ed')
-    declare_x_arg = DeclareLaunchArgument('x', default_value='0.0')
-    declare_y_arg = DeclareLaunchArgument('y', default_value='0.0')
+    declare_x_arg = DeclareLaunchArgument('x', default_value='-4.20')
+    declare_y_arg = DeclareLaunchArgument('y', default_value='1.20')
     declare_yaw_arg = DeclareLaunchArgument('yaw', default_value='0.0')
     declare_robot_lidar_frame_arg = DeclareLaunchArgument('lidar_frame', default_value='laser_frame')
     world = LaunchConfiguration('world')
@@ -97,54 +97,29 @@ def generate_launch_description():
             {'publish_rate': 5.0},
             {'trajectory_type': 'square'},
             {'side_length': 0.0},
-            {'start_x': -1.45},
-            {'start_y': 1.2},
+            {'start_x': -1.20},
+            {'start_y': 1.5},
         ],
     )
 
-    # obstacle_avoidance_node = Node(
-    #         package='puzzlebot_description',
-    #         # 1. Cambiar si renombraste el ejecutable en tu setup.py (ej. 'obstacle_avoidance_bug0')
-    #         executable='obstacle_avoidance', 
-    #         name='obstacle_avoidance',
-    #         output='screen',
-    #         parameters=[
-    #             {'linear_speed': 0.19},            # Velocidad lineal recomendada para Bug 0
-    #             {'angular_speed': 0.55},           # Velocidad angular recomendada para Bug 0
-    #             {'goal_tolerance': 0.15},          # Tolerancia de llegada a la meta (15 cm)
-    #             {'yaw_tolerance': 0.25},
-    #             {'obstacle_distance': 0.10},       # Umbral frontal para detectar el muro (40 cm)
-    #             {'front_angle': 30.0},             # Cono de visión frontal (40 grados)
-    #             {'scan_topic': 'scan'},
-    #             {'cmd_vel_topic': 'cmd_vel'},
-    #             {'goal_topic': 'next_point'},
-    #             {'odom_topic': 'odom'},
-                
-    #             # --- NUEVO PARÁMETRO ESPECÍFICO DE BUG 0 ---
-    #             {'wall_dist_target': 0.25},        # Distancia ideal para costear la pared derecha (35 cm)
-    #         ],
-    #     )
-    
-    obstacle_avoidancebug2_node = Node(
+    # obstacle_avoidance (legacy) node — enabled in this launch
+    obstacle_avoidance_node = Node(
             package='puzzlebot_description',
-            executable='obstacle_avoidancebug2',  # Asegúrate de que apunte al nuevo script en tu setup.py
-            name='obstacle_avoidancebug2',
+            executable='obstacle_avoidance',
+            name='obstacle_avoidance',
             output='screen',
             parameters=[
-                {'linear_speed': 0.19},            
-                {'angular_speed': 0.55},           
-                {'goal_tolerance': 0.1},          # Tolerancia de llegada a la meta (15 cm)
+                {'linear_speed': 0.19},            # Velocidad lineal recomendada
+                {'angular_speed': 0.55},           # Velocidad angular recomendada
+                {'goal_tolerance': 0.10},          # Tolerancia de llegada a la meta (10 cm)
                 {'yaw_tolerance': 0.25},
-                {'obstacle_distance': 0.10},       # Umbral frontal para detectar el muro
+                {'obstacle_distance': 0.40},       # Umbral frontal para detectar el muro
                 {'front_angle': 30.0},             # Cono de visión frontal (30 grados)
                 {'scan_topic': 'scan'},
                 {'cmd_vel_topic': 'cmd_vel'},
-                    {'goal_topic': 'next_point'},
-                    {'odom_topic': 'ground_truth'},
+                {'goal_topic': 'next_point'},
+                {'odom_topic': 'ground_truth'},
                 {'wall_dist_target': 0.25},        # Distancia ideal para costear la pared derecha
-                
-                # --- NUEVO PARÁMETRO ESPECÍFICO DE BUG 2 ---
-                {'m_line_tolerance': 0.10},        # Tolerancia para re-interceptar la M-Line (10 cm)
             ],
         )
 
@@ -161,6 +136,5 @@ def generate_launch_description():
         localization_node,
         kinematic_simulator_node,
         setpoint_generator_node,
-        #obstacle_avoidance_node,
-        obstacle_avoidancebug2_node,
+        obstacle_avoidance_node,
     ])
