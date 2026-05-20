@@ -9,9 +9,9 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool
 
 
-class ObstacleAvoidanceBug0(Node):
+class ObstacleAvoidanceBug2(Node):
     def __init__(self) -> None:
-        super().__init__('obstacle_avoidance_bug0')
+        super().__init__('obstacle_avoidance_bug2')
 
         # --- PARÁMETROS CONFIGURABLES ---
         self.declare_parameter('linear_speed', 0.15)
@@ -24,6 +24,9 @@ class ObstacleAvoidanceBug0(Node):
         self.declare_parameter('obstacle_distance', 0.40) # Umbral frontal (40 cm)
         self.declare_parameter('wall_dist_target', 0.35)   # Distancia deseada a la pared derecha (35 cm)
         self.declare_parameter('front_angle', 40.0)
+        
+        # Parámetro extra para el umbral de cruce con la M-line
+        self.declare_parameter('m_line_tolerance', 0.10)   # 10 cm de tolerancia para re-interceptar la línea
         
         # Nombres de tópicos según tu arquitectura
         self.declare_parameter('scan_topic', 'scan')
@@ -46,6 +49,7 @@ class ObstacleAvoidanceBug0(Node):
         self.obstacle_distance = float(self.get_parameter('obstacle_distance').value)
         self.wall_dist_target = float(self.get_parameter('wall_dist_target').value)
         self.front_angle = float(self.get_parameter('front_angle').value)
+        self.m_line_tolerance = float(self.get_parameter('m_line_tolerance').value)
         
         self.scan_topic = str(self.get_parameter('scan_topic').value)
         self.cmd_vel_topic = str(self.get_parameter('cmd_vel_topic').value)
@@ -58,11 +62,16 @@ class ObstacleAvoidanceBug0(Node):
         self.y = 0.0
         self.theta = 0.0
         self.have_odom = False
-        self.have_goal = True  # Inicia en True porque toma los del parámetro inicial
+        self.have_goal = False  # Cambiado a False para esperar a guardar el start_x inicial en el odom_callback
         self.latest_scan = None
         self.goal_reached = False
         
-        # Estados Bug 0: 'GIRAR_HACIA_META', 'AVANZAR_A_META', 'WALL_FOLLOWING'
+        # Puntos de origen para calcular la M-Line (se fijan al recibir odom/meta)
+        self.start_x = 0.0
+        self.start_y = 0.0
+        self.m_line_initialized = False
+        
+        # Estados Bug 2: 'GIRAR_HACIA_META', 'AVANZAR_A_META', 'WALL_FOLLOWING'
         self.state = 'GIRAR_HACIA_META'
         self.hit_distance = float('inf')
 
@@ -76,7 +85,7 @@ class ObstacleAvoidanceBug0(Node):
 
         # Timer de control asignado a la frecuencia configurada
         self.timer = self.create_timer(1.0 / self.publish_rate, self.control_loop)
-        self.get_logger().info('Obstacle Avoidance con Bug 0 Inicializado.')
+        self.get_logger().info('Obstacle Avoidance con Bug 2 Inicializado.')
 
     @staticmethod
     def normalize_angle(angle: float) -> float:
@@ -86,16 +95,29 @@ class ObstacleAvoidanceBug0(Node):
         self.goal_x = float(msg.x)
         self.goal_y = float(msg.y)
         self.goal_theta = float(msg.z)
+        
+        # Forzar a recalcular la M-line con la posición actual del robot
+        self.start_x = self.x
+        self.start_y = self.y
+        self.m_line_initialized = True
+        
         self.have_goal = True
         self.goal_reached = False
         self.state = 'GIRAR_HACIA_META'
         self.hit_distance = float('inf')
-        self.get_logger().info(f'Nueva meta recibida: x={self.goal_x:.2f}, y={self.goal_y:.2f}')
+        self.get_logger().info(f'Nueva meta recibida: x={self.goal_x:.2f}, y={self.goal_y:.2f}. M-Line recalculada.')
 
     def odom_callback(self, msg: Odometry) -> None:
         self.x = msg.pose.pose.position.x
         self.y = msg.pose.pose.position.y
         
+        # Inicializar el punto de partida la primera vez si no se ha recibido un goal por tópico
+        if not self.m_line_initialized:
+            self.start_x = self.x
+            self.start_y = self.y
+            self.m_line_initialized = True
+            self.have_goal = True # Permite arrancar usando los parámetros iniciales del launch/nodo
+
         # Conversión de Cuaternión a Euler (Yaw)
         q = msg.pose.pose.orientation
         siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
@@ -105,6 +127,22 @@ class ObstacleAvoidanceBug0(Node):
 
     def scan_callback(self, msg: LaserScan) -> None:
         self.latest_scan = msg
+
+    def is_on_m_line(self) -> bool:
+        """
+        Calcula la distancia perpendicular desde la posición actual del robot 
+        a la recta (M-line) definida por (start_x, start_y) y (goal_x, goal_y).
+        """
+        # Ecuación de la recta: AB x AC (producto cruz modificado para distancia en 2D)
+        # Linea de A(start) a B(goal). Punto actual C(x, y)
+        num = abs((self.goal_y - self.start_y) * self.x - (self.goal_x - self.start_x) * self.y + self.goal_x * self.start_y - self.goal_y * self.start_x)
+        den = math.hypot(self.goal_y - self.start_y, self.goal_x - self.start_x)
+        
+        if den == 0.0:
+            return False
+            
+        distance_to_line = num / den
+        return distance_to_line < self.m_line_tolerance
 
     def control_loop(self) -> None:
         cmd = Twist()
@@ -140,12 +178,12 @@ class ObstacleAvoidanceBug0(Node):
         # Evaluación de obstáculos usando el LiDAR
         obstacle_ahead = self.is_obstacle_ahead()
 
-        # --- MÁQUINA DE ESTADOS BUG 0 ---
+        # --- MÁQUINA DE ESTADOS BUG 2 ---
         if self.state == 'GIRAR_HACIA_META':
             if obstacle_ahead:
                 self.hit_distance = distance
                 self.state = 'WALL_FOLLOWING'
-                self.get_logger().info('[BUG 0] Obstáculo detectado al girar. Pasando a WALL_FOLLOWING.')
+                self.get_logger().info(f'[BUG 2] Obstáculo detectado al girar. Pasando a WALL_FOLLOWING (hit_dist={distance:.2f}m).')
                 cmd = self.follow_wall()
             else:
                 if abs(alpha) > 0.15:
@@ -158,7 +196,7 @@ class ObstacleAvoidanceBug0(Node):
             if obstacle_ahead:
                 self.hit_distance = distance
                 self.state = 'WALL_FOLLOWING'
-                self.get_logger().info(f'[BUG 0] Obstáculo detectado en camino libre. Siguiendo pared (hit_dist={distance:.2f}m).')
+                self.get_logger().info(f'[BUG 2] Obstáculo detectado en M-line. Siguiendo pared (hit_dist={distance:.2f}m).')
                 cmd = self.follow_wall()
             else:
                 if abs(alpha) > 0.30:
@@ -168,16 +206,19 @@ class ObstacleAvoidanceBug0(Node):
                     cmd.angular.z = 0.0
 
         elif self.state == 'WALL_FOLLOWING':
-            # Evaluar si el camino directo hacia la meta está completamente limpio
+            # Evaluar las condiciones estrictas de escape de Bug 2:
+            # 1. Estar en la M-line nuevamente.
+            # 2. Estar notablemente más cerca de la meta que la distancia de impacto original (hit_distance).
+            # 3. Que el frente o camino inmediato hacia la meta no esté bloqueado para evitar bucles instantáneos.
+            on_m_line = self.is_on_m_line()
             path_clear = self.is_path_to_goal_clear(heading)
             
-            # Condición estricta de escape de Bug 0: Frente despejado Y estar más cerca que cuando impactamos
-            if not obstacle_ahead and path_clear and distance < (self.hit_distance - 0.10):
-                self.get_logger().info('[BUG 0] Escape válido. Volviendo a orientarse a la meta.')
+            if on_m_line and (distance < (self.hit_distance - 0.20)) and not obstacle_ahead and path_clear:
+                self.get_logger().info('[BUG 2] Cruce de M-line válido y más cercano detectado. Escapando de la pared.')
                 self.state = 'GIRAR_HACIA_META'
                 self.hit_distance = float('inf')
                 
-                # Giro inmediato para romper inercia de la pared
+                # Romper inercia limpiamente deteniendo el robot para reorientarse
                 cmd.linear.x = 0.0
                 cmd.angular.z = np.sign(alpha) * self.angular_speed
             else:
@@ -281,7 +322,7 @@ class ObstacleAvoidanceBug0(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ObstacleAvoidanceBug0()
+    node = ObstacleAvoidanceBug2()
     signal.signal(signal.SIGINT, node.stop_handler)
 
     try:

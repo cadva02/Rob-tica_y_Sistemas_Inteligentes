@@ -38,7 +38,10 @@ setup(
             'localization = puzzlebot_description.localization:main',
             'drive_in_plane = puzzlebot_description.drive_in_plane:main',
             'setpoint_generator = puzzlebot_description.setpoint_generator:main',
+            'kinematic_simulator = puzzlebot_description.kinematic_simulator:main',
+            'point_stabilizer = puzzlebot_description.point_stabilizer:main',
             'obstacle_avoidance = puzzlebot_description.obstacle_avoidance:main',
+            'obstacle_avoidancebug2 = puzzlebot_description.obstacle_avoidancebug2:main',
         ],
     },
 )

@@ -205,7 +205,7 @@
                     </noise>
                 </camera>
                 <always_on>1</always_on>
-                <gz_frame_id>${prefix}${camera_frame}</gz_frame_id>
+                <frame_id>${prefix}${camera_frame}</frame_id>
                 <update_rate>10</update_rate>
                 <visualize>false</visualize>
             </sensor>
@@ -219,7 +219,7 @@
             <update_rate>${update_rate}</update_rate>
             <always_on>${always_on}</always_on>
             <visualize>${visualize}</visualize>
-            <gz_frame_id>${prefix}${tof_frame}</gz_frame_id>
+            <frame_id>${prefix}${tof_frame}</frame_id>
             <ray>
             <scan>
                 <horizontal>

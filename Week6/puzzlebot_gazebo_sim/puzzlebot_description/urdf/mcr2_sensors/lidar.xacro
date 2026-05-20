@@ -132,7 +132,7 @@
     <gazebo reference="${prefix}laser_frame">
         <sensor name="${prefix}lidar_sensor" type="gpu_lidar">
             <topic>${prefix}${topic_name}</topic>
-            <gz_frame_id>${prefix}${lidar_frame}</gz_frame_id>
+            <frame_id>${prefix}${lidar_frame}</frame_id>
             <pose> 0 0 0 0 0 0 </pose>
             <update_rate>${update_rate}</update_rate>
             <always_on>${always_on}</always_on>
