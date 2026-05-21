@@ -16,8 +16,8 @@ def generate_launch_description():
 
     declare_robot_name_arg = DeclareLaunchArgument('robot_name', default_value='Puzzlebot1')
     declare_robot_arg = DeclareLaunchArgument('robot', default_value='puzzlebot_jetson_lidar_ed')
-    declare_x_arg = DeclareLaunchArgument('x', default_value='-4.20')
-    declare_y_arg = DeclareLaunchArgument('y', default_value='1.20')
+    declare_x_arg = DeclareLaunchArgument('x', default_value='-0.5')
+    declare_y_arg = DeclareLaunchArgument('y', default_value='0.3')
     declare_yaw_arg = DeclareLaunchArgument('yaw', default_value='0.0')
     declare_robot_lidar_frame_arg = DeclareLaunchArgument('lidar_frame', default_value='laser_frame')
     world = LaunchConfiguration('world')
@@ -113,13 +113,13 @@ def generate_launch_description():
                 {'angular_speed': 0.55},           # Velocidad angular recomendada
                 {'goal_tolerance': 0.10},          # Tolerancia de llegada a la meta (10 cm)
                 {'yaw_tolerance': 0.25},
-                {'obstacle_distance': 0.40},       # Umbral frontal para detectar el muro
-                {'front_angle': 30.0},             # Cono de visión frontal (30 grados)
+                {'obstacle_distance': 0.30},       # Umbral frontal para detectar el muro
+                {'front_angle': 20.0},             # Cono de visión frontal (30 grados)
                 {'scan_topic': 'scan'},
                 {'cmd_vel_topic': 'cmd_vel'},
                 {'goal_topic': 'next_point'},
                 {'odom_topic': 'ground_truth'},
-                {'wall_dist_target': 0.25},        # Distancia ideal para costear la pared derecha
+                {'wall_dist_target': 0.20},        # Distancia ideal para costear la pared derecha
             ],
         )
 

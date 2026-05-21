@@ -75,6 +75,7 @@ class ObstacleAvoidanceBug0(Node):
         self.hit_distance = float('inf')
         # smoothing state for wall following
         self.prev_angular = 0.0
+        self.wall_follow_side = 'RIGHT'
         self.kp_wall = float(self.get_parameter('kp_wall').value)
         self.wall_ang_limit = float(self.get_parameter('wall_ang_limit').value)
         # smoothing for obstacle detection
@@ -186,9 +187,10 @@ class ObstacleAvoidanceBug0(Node):
         if self.state == 'GIRAR_HACIA_META':
             if obstacle_ahead:
                 self.hit_distance = distance
+                self.wall_follow_side = self.select_wall_side()
                 self.state = 'WALL_FOLLOWING'
                 self.get_logger().info('[BUG 0] Obstáculo detectado al girar. Pasando a WALL_FOLLOWING.')
-                cmd = self.follow_wall()
+                cmd = self.follow_wall(self.wall_follow_side)
             else:
                 if abs(alpha) > 0.15:
                     cmd.linear.x = 0.0
@@ -199,9 +201,10 @@ class ObstacleAvoidanceBug0(Node):
         elif self.state == 'AVANZAR_A_META':
             if obstacle_ahead:
                 self.hit_distance = distance
+                self.wall_follow_side = self.select_wall_side()
                 self.state = 'WALL_FOLLOWING'
                 self.get_logger().info(f'[BUG 0] Obstáculo detectado en camino libre. Siguiendo pared (hit_dist={distance:.2f}m).')
-                cmd = self.follow_wall()
+                cmd = self.follow_wall(self.wall_follow_side)
             else:
                 if abs(alpha) > 0.30:
                     self.state = 'GIRAR_HACIA_META'
@@ -210,6 +213,7 @@ class ObstacleAvoidanceBug0(Node):
                     cmd.angular.z = 0.0
 
         elif self.state == 'WALL_FOLLOWING':
+            self.wall_follow_side = self.select_wall_side()
             # Evaluar si el camino directo hacia la meta está completamente limpio
             path_clear = self.is_path_to_goal_clear(heading)
             
@@ -225,7 +229,7 @@ class ObstacleAvoidanceBug0(Node):
                 cmd.linear.x = 0.0
                 cmd.angular.z = np.sign(alpha) * self.angular_speed
             else:
-                cmd = self.follow_wall()
+                cmd = self.follow_wall(self.wall_follow_side)
 
         self.cmd_pub.publish(cmd)
 
@@ -246,6 +250,35 @@ class ObstacleAvoidanceBug0(Node):
         vals = vals[(vals > 0.02) & np.isfinite(vals)] # Limpieza de ruidos e infinitos
 
         return bool(np.any(vals < self.obstacle_distance))
+
+    def _sector_min_range(self, center_deg: float, half_width_deg: float) -> float:
+        if self.latest_scan is None:
+            return float('inf')
+
+        ranges = np.array(self.latest_scan.ranges, dtype=float)
+        n = len(ranges)
+        inc = self.latest_scan.angle_increment
+
+        center_idx = int(round(math.radians(center_deg) / inc)) % n
+        half_width = max(1, int(math.radians(half_width_deg) / inc))
+        idxs = [(center_idx + i) % n for i in range(-half_width, half_width + 1)]
+        vals = ranges[idxs]
+        vals = vals[(vals > 0.02) & np.isfinite(vals)]
+
+        if len(vals) == 0:
+            return float('inf')
+        return float(np.min(vals))
+
+    def select_wall_side(self) -> str:
+        left_dist = self._sector_min_range(90.0, 30.0)
+        right_dist = self._sector_min_range(-90.0, 30.0)
+
+        if not math.isfinite(left_dist) and not math.isfinite(right_dist):
+            return self.wall_follow_side
+
+        if left_dist <= right_dist:
+            return 'LEFT'
+        return 'RIGHT'
 
     def is_path_to_goal_clear(self, heading: float) -> bool:
         if self.latest_scan is None:
@@ -269,47 +302,39 @@ class ObstacleAvoidanceBug0(Node):
             return True
         return float(np.min(vals)) > self.obstacle_distance
 
-    def follow_wall(self) -> Twist:
+    def follow_wall(self, wall_side: str = 'RIGHT') -> Twist:
         twist = Twist()
         
         if self.latest_scan is None:
             return twist
 
-        ranges = np.array(self.latest_scan.ranges, dtype=float)
-        n = len(ranges)
-        inc = self.latest_scan.angle_increment
+        scan_front = self._sector_min_range(0.0, self.front_angle / 2.0)
+        scan_left = self._sector_min_range(90.0, 30.0)
+        scan_right = self._sector_min_range(-90.0, 30.0)
 
-        # Segmentar sectores precisos: Frente y Costado Derecho (-90 grados exactos)
-        half_fwd = max(1, int(math.radians(self.front_angle / 2.0) / inc))
-        half_side = max(1, int(math.radians(30.0 / 2.0) / inc))
-        idx_right = int(round(math.radians(-90.0) / inc)) % n
-
-        # Calcular distancias mínimas reales filtradas
-        idxs_fwd = [(0 + i) % n for i in range(-half_fwd, half_fwd + 1)]
-        vals_fwd = ranges[idxs_fwd]
-        vals_fwd = vals_fwd[(vals_fwd > 0.02) & np.isfinite(vals_fwd)]
-        scan_front = float(np.min(vals_fwd)) if len(vals_fwd) > 0 else float('inf')
-
-        idxs_right = [(idx_right + i) % n for i in range(-half_side, half_side + 1)]
-        vals_right = ranges[idxs_right]
-        vals_right = vals_right[(vals_right > 0.02) & np.isfinite(vals_right)]
-        scan_right = float(np.min(vals_right)) if len(vals_right) > 0 else float('inf')
-
-        # SMOOTHED WALL-FOLLOWING (right-side)
+        # SMOOTHED WALL-FOLLOWING (dynamic side selection)
         frente_libre = scan_front > self.obstacle_distance
 
         if not frente_libre:
             # Obstacle directly ahead: stop and pivot left to avoid
             twist.linear.x = 0.0
-            twist.angular.z = self.angular_speed
+            twist.angular.z = self.angular_speed if wall_side == 'RIGHT' else -self.angular_speed
         else:
-            # If we have a finite distance to the right wall, use P-control
-            if math.isfinite(scan_right):
-                error = scan_right - self.wall_dist_target
-                ang = -self.kp_wall * error
+            # If we have a finite distance to the chosen wall, use P-control
+            if wall_side == 'LEFT':
+                if math.isfinite(scan_left):
+                    error = scan_left - self.wall_dist_target
+                    ang = self.kp_wall * error
+                else:
+                    # No wall detected: gently steer left to re-acquire it
+                    ang = 0.3
             else:
-                # No wall detected: gently steer right to re-acquire it
-                ang = -0.3
+                if math.isfinite(scan_right):
+                    error = scan_right - self.wall_dist_target
+                    ang = -self.kp_wall * error
+                else:
+                    # No wall detected: gently steer right to re-acquire it
+                    ang = -0.3
 
             # Limit and smooth angular velocity to avoid jitter
             ang = max(min(ang, self.wall_ang_limit), -self.wall_ang_limit)
