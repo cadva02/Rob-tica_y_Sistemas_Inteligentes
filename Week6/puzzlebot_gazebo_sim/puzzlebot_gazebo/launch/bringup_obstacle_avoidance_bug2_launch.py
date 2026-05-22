@@ -16,8 +16,8 @@ def generate_launch_description():
 
     declare_robot_name_arg = DeclareLaunchArgument('robot_name', default_value='Puzzlebot1')
     declare_robot_arg = DeclareLaunchArgument('robot', default_value='puzzlebot_jetson_lidar_ed')
-    declare_x_arg = DeclareLaunchArgument('x', default_value='0.98') #0.98
-    declare_y_arg = DeclareLaunchArgument('y', default_value='-1.13') #-1.13
+    declare_x_arg = DeclareLaunchArgument('x', default_value='0.98') #0.98 1.48 2.37
+    declare_y_arg = DeclareLaunchArgument('y', default_value='-1.13') #-1.13 2.64
     declare_yaw_arg = DeclareLaunchArgument('yaw', default_value='0.0')
     declare_robot_lidar_frame_arg = DeclareLaunchArgument('lidar_frame', default_value='laser_frame')
     world = LaunchConfiguration('world')
@@ -101,6 +101,8 @@ def generate_launch_description():
             {'start_y': 1.50},
             # {'start_x': 1.45},
             # {'start_y': 1.20},
+            # {'start_x': 0.0},
+            # {'start_y': -2.5},
         ],
     )
 
@@ -122,13 +124,17 @@ def generate_launch_description():
             {'obstacle_distance': 0.30},
             {'wall_dist_target': 0.30},
             {'front_angle': 34.0},
-            {'kp_wall': 0.90},
-            {'wall_ang_limit': 0.8},
-            {'wall_follow_deadband': 0.03},
-            {'wall_recovery_angular': 0.20},
-            {'wall_follow_smoothing': 0.6},
-            {'obstacle_detection_count': 5},
-            {'wall_exit_suppression': 0.7},
+            {'kp_wall': 0.93},
+            {'wall_ang_limit': 0.9},
+            {'wall_follow_deadband': 0.1},
+            {'wall_recovery_angular': 0.60},
+            {'wall_follow_smoothing': 0.66},
+            {'obstacle_detection_count': 10},
+            {'wall_exit_suppression': 0.9},
+            {'required_path_clear_count': 20},
+            {'min_wall_follow_time': 0.8},
+            {'min_distance_improvement': 0.02},
+            {'front_clear_margin': 0.15},   
             {'scan_topic': 'scan'},
             {'cmd_vel_topic': 'cmd_vel'},
             {'goal_topic': 'next_point'},

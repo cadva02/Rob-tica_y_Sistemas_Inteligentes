@@ -21,7 +21,7 @@ class ObstacleAvoidanceBug2(Node):
         self.declare_parameter('goal_theta', 0.0)
         self.declare_parameter('goal_tolerance', 0.15)
         self.declare_parameter('yaw_tolerance', 0.25)
-        self.declare_parameter('obstacle_distance', 0.) # Umbral frontal (40 cm)
+        self.declare_parameter('obstacle_distance', 0.3) # Umbral frontal (40 cm)
         self.declare_parameter('wall_dist_target', 0.35)   # Distancia deseada a la pared derecha (35 cm)
         self.declare_parameter('front_angle', 40.0)
         # Control parameters for smoother wall-following
@@ -33,6 +33,11 @@ class ObstacleAvoidanceBug2(Node):
         # Parameters for obstacle detection smoothing and suppression
         self.declare_parameter('obstacle_detection_count', 3)
         self.declare_parameter('wall_exit_suppression', 1.0)
+        # Hysteresis / timing to avoid premature rejoining M-line
+        self.declare_parameter('required_path_clear_count', 3)
+        self.declare_parameter('min_wall_follow_time', 1.0)
+        self.declare_parameter('min_distance_improvement', 0.05)
+        self.declare_parameter('front_clear_margin', 0.15)
         
         # Nombres de tópicos según tu arquitectura
         self.declare_parameter('scan_topic', 'scan')
@@ -66,6 +71,10 @@ class ObstacleAvoidanceBug2(Node):
         self.wall_follow_deadband = float(self.get_parameter('wall_follow_deadband').value)
         self.wall_recovery_angular = float(self.get_parameter('wall_recovery_angular').value)
         self.wall_follow_smoothing = float(self.get_parameter('wall_follow_smoothing').value)
+        self.required_path_clear_count = int(self.get_parameter('required_path_clear_count').value)
+        self.min_wall_follow_time = float(self.get_parameter('min_wall_follow_time').value)
+        self.min_distance_improvement = float(self.get_parameter('min_distance_improvement').value)
+        self.front_clear_margin = float(self.get_parameter('front_clear_margin').value)
 
         # --- ESTADO INTERNO DEL ROBOT ---
         self.x = 0.0
@@ -91,6 +100,9 @@ class ObstacleAvoidanceBug2(Node):
         # smoothing for obstacle detection
         self.obstacle_ahead_count = 0
         self.last_wall_exit_time = -1e9
+        # state for sustained path-clear detection
+        self.path_clear_counter = 0
+        self.wall_follow_start_time = -1e9
 
         # --- PUBLICADORES Y SUSCRIPTORES ---
         self.cmd_pub = self.create_publisher(Twist, self.cmd_vel_topic, 10)
@@ -225,6 +237,9 @@ class ObstacleAvoidanceBug2(Node):
                 self.hit_point_y = self.y
                 self.hit_distance = distance
                 self.wall_follow_side = self.select_wall_side()
+                # record start time of wall following and reset counters
+                self.wall_follow_start_time = now
+                self.path_clear_counter = 0
                 self.log_state_transition('GIRAR_HACIA_META', 'WALL_FOLLOWING', 'obstáculo detectado al girar hacia meta')
                 self.state = 'WALL_FOLLOWING'
                 self.get_logger().info(f'[BUG 2] Obstáculo detectado al girar. Hit point: ({self.hit_point_x:.2f}, {self.hit_point_y:.2f})')
@@ -244,6 +259,9 @@ class ObstacleAvoidanceBug2(Node):
                 self.hit_point_y = self.y
                 self.hit_distance = distance
                 self.wall_follow_side = self.select_wall_side()
+                # record start time of wall following and reset counters
+                self.wall_follow_start_time = now
+                self.path_clear_counter = 0
                 self.log_state_transition('AVANZAR_A_META', 'WALL_FOLLOWING', 'obstáculo detectado en avance hacia meta')
                 self.state = 'WALL_FOLLOWING'
                 self.get_logger().info(f'[BUG 2] Obstáculo detectado en camino libre. Hit point: ({self.hit_point_x:.2f}, {self.hit_point_y:.2f})')
@@ -260,17 +278,51 @@ class ObstacleAvoidanceBug2(Node):
             # Bug 2: Verificar si el robot está en la línea M (línea recta start -> goal)
             # y si el camino hacia la meta está despejado
             on_m_line = self.is_on_m_line()
-            path_clear = self.is_path_to_goal_clear(heading)
+            # require sustained path clear and forward clearance to avoid corner-induced false positives
+            raw_path_clear = self.is_path_to_goal_clear(heading)
+            # forward clearance measured in meters
+            forward_clear_dist = self._sector_min_range(0.0, self.front_angle / 2.0)
+            forward_clear = forward_clear_dist > (self.obstacle_distance + self.front_clear_margin)
+
+            if raw_path_clear and forward_clear:
+                self.path_clear_counter = min(self.required_path_clear_count, self.path_clear_counter + 1)
+            else:
+                self.path_clear_counter = max(0, self.path_clear_counter - 1)
+
+            path_clear = (
+                 self.path_clear_counter >= self.required_path_clear_count
+            )
+
+            # =========================
+            # NUEVA LÓGICA
+            # =========================
+            scan_left = self._sector_min_range(90.0, 30.0)
+            scan_right = self._sector_min_range(-90.0, 30.0)
+
+            if self.wall_follow_side == 'RIGHT':
+                wall_still_close = scan_right < (
+                    self.wall_dist_target + 0.12
+                )
+            else:
+                wall_still_close = scan_left < (
+                    self.wall_dist_target + 0.12
+                )
+            
+            if wall_still_close:
+                cmd = self.follow_wall(self.wall_follow_side)
             
             # Condición de escape de Bug 2: 
             # El robot está nuevamente en la línea M, el camino está despejado, 
             # no hay obstáculo adelante y está más cerca de la meta que el punto de impacto.
+            # only allow escape when conditions are sustained and we've followed the wall for a minimum time
             if (
                     on_m_line
                     and path_clear
                     and not obstacle_ahead
-                    and distance + 0.05 < self.hit_distance
-                    and abs(alpha) < 0.50
+                    #and not wall_still_close
+                    and distance + self.min_distance_improvement < self.hit_distance
+                    and abs(alpha) < 0.70
+                    and (now - self.wall_follow_start_time) > self.min_wall_follow_time
                 ):
                 self.log_state_transition('WALL_FOLLOWING', 'GIRAR_HACIA_META', 'escape válido en línea M')
                 self.get_logger().info('[BUG 2] Escape válido. Volviendo a orientarse a la meta.')
@@ -372,7 +424,7 @@ class ObstacleAvoidanceBug2(Node):
         goal_angle = self.normalize_angle(heading - self.theta)
         idx_goal = self._angle_to_index(goal_angle)
 
-        half_width = max(1, int(math.radians(20.0 / 2.0) / self.latest_scan.angle_increment))
+        half_width = max(1, int(math.radians(40.0 / 2.0) / self.latest_scan.angle_increment))
         idxs = [(idx_goal + i) for i in range(-half_width, half_width + 1)]
         idxs = [max(0, min(len(self.latest_scan.ranges) - 1, idx)) for idx in idxs]
 
