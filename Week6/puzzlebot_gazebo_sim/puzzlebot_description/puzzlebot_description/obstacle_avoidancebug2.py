@@ -62,7 +62,7 @@ class ObstacleAvoidanceBug2(Node):
         self.y = 0.0
         self.theta = 0.0
         self.have_odom = False
-        self.have_goal = False  # Cambiado a False para esperar a guardar el start_x inicial en el odom_callback
+        self.have_goal = True
         self.latest_scan = None
         self.goal_reached = False
         
