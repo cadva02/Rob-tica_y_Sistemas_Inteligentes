@@ -42,6 +42,7 @@ setup(
             'point_stabilizer = puzzlebot_description_final.point_stabilizer:main',
             'obstacle_avoidance = puzzlebot_description_final.obstacle_avoidance:main',
             'obstacle_avoidance_bug2 = puzzlebot_description_final.obstacle_avoidance_bug2:main',
+            'simulated_landmarks = puzzlebot_description_final.simulated_landmarks:main',
         ],
     },
 )

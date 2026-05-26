@@ -5,7 +5,8 @@ This launch starts:
 - `setpoint_generator` configured for a square trajectory.
 - `point_stabilizer` for closed-loop motion control.
 - `kinematic_simulator` to generate wheel speeds and joint states.
-- `localization` using EKF prediction from encoders and optional ArUco corrections to publish `/odom` and TF.
+- `simulated_landmarks` to publish landmark detections and RViz markers that replace the real ArUco tags in simulation.
+- `localization` using EKF fused with those landmark detections to publish `/odom` and TF.
 
 The optional `joint_state_publisher_gui` remains available for manual testing,
 but it is disabled by default because the simulator publishes joint states.
@@ -100,15 +101,31 @@ def generate_launch_description():
         }],
     )
 
-    deadreckoning_node = Node(
+    simulated_landmarks_node = Node(
+        package='puzzlebot_description_final',
+        executable='simulated_landmarks',
+        name='simulated_landmarks',
+        output='screen',
+        parameters=[{
+            'pose_topic': 'pose_sim',
+            'aruco_topic': '/aruco_markers',
+            'visualization_topic': '/sim_landmarks',
+            'max_detection_range': 0.5,
+            'publish_rate': 10.0,
+        }],
+    )
+
+    localization_node = Node(
         package='puzzlebot_description_final',
         executable='localization',
-        name='dead_reckoning',
+        name='localization',
         output='screen',
         parameters=[{
             'wheel_radius': 0.05,
             'wheel_base': 0.19,
             'sample_time': 0.02,
+            'publish_dead_reckoning_aux': False,
+            'landmark_message_type': 'visualization',
         }],
     )
 
@@ -121,7 +138,8 @@ def generate_launch_description():
         setpoint_node,
         point_stabilizer_node,
         kinematic_node,
-        deadreckoning_node,
+        simulated_landmarks_node,
+        localization_node,
     ])
 
     return ld

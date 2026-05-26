@@ -8,11 +8,12 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from std_msgs.msg import Float32
 from tf2_ros import TransformBroadcaster
+from visualization_msgs.msg import MarkerArray as VizMarkerArray
 
 try:
-    from aruco_msgs.msg import MarkerArray  # type: ignore[reportMissingImports]
+    from aruco_msgs.msg import MarkerArray as ArucoMarkerArray  # type: ignore[reportMissingImports]
 except ImportError:  # pragma: no cover - optional at runtime
-    MarkerArray = None
+    ArucoMarkerArray = None
 
 
 def normalize_angle(angle: float) -> float:
@@ -47,7 +48,7 @@ def quaternion_to_yaw(orientation) -> float:
 
 
 class EkfLocalization(Node):
-    """EKF localization using wheel encoders and ArUco pose observations."""
+    """EKF localization using wheel encoders and landmark pose observations."""
 
     def __init__(self) -> None:
         super().__init__('localisation_ekf')
@@ -69,15 +70,14 @@ class EkfLocalization(Node):
         self.declare_parameter('camera_base_y', 0.0)
         self.declare_parameter('camera_base_theta', 0.0)
         self.declare_parameter('aruco_topic', '/aruco_markers')
+        self.declare_parameter('landmark_message_type', 'aruco')
         self.declare_parameter('publish_dead_reckoning_aux', True)
         self.declare_parameter(
             'marker_map_json',
             json.dumps(
                 [
-                    {'id': 0, 'x': 2.5, 'y': -0.5, 'theta': math.pi},
-                    {'id': 1, 'x': 2.5, 'y': 2.5, 'theta': 3.0 * math.pi / 2.0},
-                    {'id': 2, 'x': -0.5, 'y': 2.5, 'theta': 0.0},
-                    {'id': 3, 'x': -0.5, 'y': -0.5, 'theta': math.pi / 2.0},
+                    {'id': 1, 'x': 4.2, 'y': 2.0, 'theta': 0.0},
+                    {'id': 3, 'x': 0.00, 'y': 2.20, 'theta': math.pi / 2.0},
                 ]
             ),
         )
@@ -106,6 +106,7 @@ class EkfLocalization(Node):
         marker_map_json = str(self.get_parameter('marker_map_json').value)
         self.marker_map = self._parse_marker_map(marker_map_json)
         self.aruco_topic = str(self.get_parameter('aruco_topic').value)
+        self.landmark_message_type = str(self.get_parameter('landmark_message_type').value)
         self.publish_dead_reckoning_aux = bool(self.get_parameter('publish_dead_reckoning_aux').value)
 
         self.state = np.array(
@@ -129,9 +130,16 @@ class EkfLocalization(Node):
         self.wr_sub = self.create_subscription(Float32, 'wr', self.wr_cb, 10)
         self.wl_sub = self.create_subscription(Float32, 'wl', self.wl_cb, 10)
 
-        if MarkerArray is not None:
+        if self.landmark_message_type == 'visualization':
             self.marker_sub = self.create_subscription(
-                MarkerArray,
+                VizMarkerArray,
+                self.aruco_topic,
+                self.marker_cb,
+                10,
+            )
+        elif ArucoMarkerArray is not None:
+            self.marker_sub = self.create_subscription(
+                ArucoMarkerArray,
                 self.aruco_topic,
                 self.marker_cb,
                 10,
@@ -139,8 +147,8 @@ class EkfLocalization(Node):
         else:
             self.marker_sub = None
             self.get_logger().warning(
-                'aruco_msgs is not available; EKF will run in prediction-only mode until ArUco '
-                f'observations are provided on {self.aruco_topic}'
+                'aruco_msgs is not available; EKF will wait for landmark observations on '
+                f'{self.aruco_topic}'
             )
 
         self.timer = self.create_timer(self.sample_time, self.timer_cb)
