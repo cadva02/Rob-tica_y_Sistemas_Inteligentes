@@ -1,0 +1,3 @@
+[console_scripts]
+puzzlebot_gazebo_final = puzzlebot_gazebo_final.puzzlebot_gazebo_final:main
+

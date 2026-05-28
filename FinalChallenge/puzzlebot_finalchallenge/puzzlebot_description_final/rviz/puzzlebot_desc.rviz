@@ -101,7 +101,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 20
+      Keep: 100
       Name: Odometry
       Position Tolerance: 0.10000000149011612
       Shape:

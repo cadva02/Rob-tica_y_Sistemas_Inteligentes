@@ -1,0 +1,13 @@
+[console_scripts]
+drive_in_plane = puzzlebot_description_final.drive_in_plane:main
+gazebo_aruco_detector = puzzlebot_description_final.gazebo_aruco_detector:main
+joint_state_publisher = puzzlebot_description_final.joint_state_publisher:main
+kinematic_simulator = puzzlebot_description_final.kinematic_simulator:main
+localization = puzzlebot_description_final.localization:main
+obstacle_avoidance = puzzlebot_description_final.obstacle_avoidance:main
+obstacle_avoidance_bug2 = puzzlebot_description_final.obstacle_avoidance_bug2:main
+point_stabilizer = puzzlebot_description_final.point_stabilizer:main
+point_tracker = puzzlebot_description_final.point_tracker:main
+setpoint_generator = puzzlebot_description_final.setpoint_generator:main
+simulated_landmarks = puzzlebot_description_final.simulated_landmarks:main
+

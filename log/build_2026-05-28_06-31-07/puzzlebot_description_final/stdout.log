@@ -1,0 +1,35 @@
+running egg_info
+writing ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/PKG-INFO
+writing dependency_links to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/dependency_links.txt
+writing entry points to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/entry_points.txt
+writing requirements to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/requires.txt
+writing top-level names to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/top_level.txt
+reading manifest file '../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file '../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/SOURCES.txt'
+running build
+running build_py
+copying puzzlebot_description_final/localization.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+running install
+running install_lib
+copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/localization.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/localization.py to localization.cpython-310.pyc
+running install_data
+copying launch/gazebo_square_no_obstacules.launch.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+copying launch/gazebo_route_no_obstacules.launch.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+running install_egg_info
+removing '/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final-0.0.0-py3.10.egg-info
+running install_scripts
+Installing drive_in_plane script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing gazebo_aruco_detector script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing joint_state_publisher script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing kinematic_simulator script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing localization script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing obstacle_avoidance script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing obstacle_avoidance_bug2 script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing point_stabilizer script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing point_tracker script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing setpoint_generator script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+Installing simulated_landmarks script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+writing list of installed files to '/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/install.log'

@@ -1,0 +1,122 @@
+[1.010s] Invoking command in '/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/FinalChallenge/puzzlebot_finalchallenge/puzzlebot_description_final': PYTHONPATH=/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../../build/puzzlebot_description_final build --build-base /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build install --record /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/install.log --single-version-externally-managed install_data
+[1.311s] running egg_info
+[1.311s] creating ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info
+[1.312s] writing ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/PKG-INFO
+[1.312s] writing dependency_links to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/dependency_links.txt
+[1.312s] writing entry points to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/entry_points.txt
+[1.313s] writing requirements to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/requires.txt
+[1.313s] writing top-level names to ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/top_level.txt
+[1.313s] writing manifest file '../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/SOURCES.txt'
+[1.316s] reading manifest file '../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/SOURCES.txt'
+[1.316s] adding license file 'LICENSE'
+[1.318s] writing manifest file '../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info/SOURCES.txt'
+[1.318s] running build
+[1.318s] running build_py
+[1.319s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build
+[1.319s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib
+[1.319s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.319s] copying puzzlebot_description_final/localization.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.319s] copying puzzlebot_description_final/drive_in_plane.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.319s] copying puzzlebot_description_final/simulated_landmarks.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.319s] copying puzzlebot_description_final/__init__.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/setpoint_generator.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/kinematic_simulator.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/obstacle_avoidance_bug2.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/point_stabilizer.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/obstacle_avoidancebug2.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/joint_state_publisher.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/obstacle_avoidance.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] copying puzzlebot_description_final/gazebo_aruco_detector.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final
+[1.320s] running install
+[1.321s] running install_lib
+[1.321s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.321s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/localization.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.321s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/drive_in_plane.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.321s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/simulated_landmarks.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.321s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/__init__.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/setpoint_generator.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/kinematic_simulator.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/obstacle_avoidance_bug2.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/point_stabilizer.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/obstacle_avoidancebug2.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/joint_state_publisher.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.322s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/obstacle_avoidance.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.323s] copying /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build/lib/puzzlebot_description_final/gazebo_aruco_detector.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final
+[1.324s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/localization.py to localization.cpython-310.pyc
+[1.329s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/drive_in_plane.py to drive_in_plane.cpython-310.pyc
+[1.329s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/simulated_landmarks.py to simulated_landmarks.cpython-310.pyc
+[1.330s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/__init__.py to __init__.cpython-310.pyc
+[1.331s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/setpoint_generator.py to setpoint_generator.cpython-310.pyc
+[1.333s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/kinematic_simulator.py to kinematic_simulator.cpython-310.pyc
+[1.334s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/obstacle_avoidance_bug2.py to obstacle_avoidance_bug2.cpython-310.pyc
+[1.337s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/point_stabilizer.py to point_stabilizer.cpython-310.pyc
+[1.339s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/obstacle_avoidancebug2.py to obstacle_avoidancebug2.cpython-310.pyc
+[1.341s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/joint_state_publisher.py to joint_state_publisher.cpython-310.pyc
+[1.342s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/obstacle_avoidance.py to obstacle_avoidance.cpython-310.pyc
+[1.344s] byte-compiling /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final/gazebo_aruco_detector.py to gazebo_aruco_detector.cpython-310.pyc
+[1.346s] running install_data
+[1.347s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/ament_index
+[1.347s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/ament_index/resource_index
+[1.347s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/ament_index/resource_index/packages
+[1.347s] copying resource/puzzlebot_description_final -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/ament_index/resource_index/packages
+[1.347s] copying package.xml -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final
+[1.348s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+[1.348s] copying launch/robot_state_publisher_launch.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+[1.349s] copying launch/gazebo_square_no_obstacules.launch.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+[1.350s] copying launch/gazebo_route_no_obstacules.launch.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+[1.350s] copying launch/rviz_view_launch.py -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/launch
+[1.350s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/config
+[1.350s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/rviz
+[1.350s] copying rviz/puzzlebot_desc.rviz -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/rviz
+[1.350s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf
+[1.350s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_control
+[1.350s] copying urdf/mcr2_control/gazebo_control.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_control
+[1.350s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_misc
+[1.350s] copying urdf/mcr2_misc/materials.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_misc
+[1.351s] copying urdf/mcr2_misc/macros.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_misc
+[1.351s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_sensors
+[1.351s] copying urdf/mcr2_sensors/laser_camera_bracket.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_sensors
+[1.351s] copying urdf/mcr2_sensors/lidar.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_sensors
+[1.351s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots
+[1.351s] copying urdf/mcr2_robots/puzzlebot_hacker_ed.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots
+[1.351s] copying urdf/mcr2_robots/puzzlebot_jetson_ed.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots
+[1.351s] copying urdf/mcr2_robots/puzzlebot_jetson_lidar_ed.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots
+[1.352s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots/jetson_lidar_ed
+[1.352s] copying urdf/mcr2_robots/jetson_lidar_ed/parameters_jetson_lidar_ed.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots/jetson_lidar_ed
+[1.352s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots/hacker_ed
+[1.352s] copying urdf/mcr2_robots/hacker_ed/parameters_hacker_ed.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots/hacker_ed
+[1.352s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots/jetson_ed
+[1.352s] copying urdf/mcr2_robots/jetson_ed/parameters_jetson_ed.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_robots/jetson_ed
+[1.352s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_mechanical
+[1.352s] copying urdf/mcr2_mechanical/puzzlebot_jetson_lidar_base.urdf.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_mechanical
+[1.352s] copying urdf/mcr2_mechanical/puzzlebot_jetson_base.urdf.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_mechanical
+[1.352s] copying urdf/mcr2_mechanical/puzzlebot_hacker_base.urdf.xacro -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/urdf/mcr2_mechanical
+[1.352s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes
+[1.352s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/sensors
+[1.353s] copying meshes/sensors/Laser_Camera_Bracket.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/sensors
+[1.353s] copying meshes/sensors/RPLidar.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/sensors
+[1.353s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/misc
+[1.353s] copying meshes/misc/NVIDIA_Jetson.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/misc
+[1.353s] copying meshes/misc/DC_Motor.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/misc
+[1.353s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/wheels
+[1.353s] copying meshes/wheels/Puzzlebot_Caster_Wheel.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/wheels
+[1.354s] copying meshes/wheels/Puzzlebot_Wheel.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/wheels
+[1.355s] creating /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/bases
+[1.355s] copying meshes/bases/Puzzlebot_Jetson_Lidar_Edition_Base.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/bases
+[1.356s] copying meshes/bases/Puzzlebot_Hacker_Editon_Base.stl -> /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/share/puzzlebot_description_final/meshes/bases
+[1.358s] running install_egg_info
+[1.361s] Copying ../../../build/puzzlebot_description_final/puzzlebot_description_final.egg-info to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages/puzzlebot_description_final-0.0.0-py3.10.egg-info
+[1.362s] running install_scripts
+[1.391s] Installing drive_in_plane script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.391s] Installing gazebo_aruco_detector script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.391s] Installing joint_state_publisher script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing kinematic_simulator script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing localization script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing obstacle_avoidance script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing obstacle_avoidance_bug2 script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing point_stabilizer script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing point_tracker script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing setpoint_generator script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.392s] Installing simulated_landmarks script to /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/puzzlebot_description_final
+[1.393s] writing list of installed files to '/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/install.log'
+[1.457s] Invoked command in '/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/FinalChallenge/puzzlebot_finalchallenge/puzzlebot_description_final' returned '0': PYTHONPATH=/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/install/puzzlebot_description_final/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../../build/puzzlebot_description_final build --build-base /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/build install --record /home/adrian/ros2_ws/src/Rob-tica_y_Sistemas_Inteligentes/build/puzzlebot_description_final/install.log --single-version-externally-managed install_data

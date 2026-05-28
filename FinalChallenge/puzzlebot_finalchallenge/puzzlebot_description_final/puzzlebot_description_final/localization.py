@@ -70,6 +70,8 @@ class EkfLocalization(Node):
         # How much to scale measurement variance with distance (linear factor per meter)
         self.declare_parameter('aruco_distance_gain', 0.5)
         self.declare_parameter('aruco_theta_distance_gain', 0.5)
+        self.declare_parameter('aruco_update_min_dist', 0.0)
+        self.declare_parameter('mahal_threshold', 9.21)
         self.declare_parameter(
             'marker_map_json',
             json.dumps(
@@ -114,6 +116,9 @@ class EkfLocalization(Node):
         # Read aruco distance scaling parameters
         self.aruco_distance_gain = float(self.get_parameter('aruco_distance_gain').value)
         self.aruco_theta_distance_gain = float(self.get_parameter('aruco_theta_distance_gain').value)
+        # If >0.0, only apply ArUco updates when the detected marker distance is <= this value (meters)
+        self.aruco_update_min_dist = float(self.get_parameter('aruco_update_min_dist').value)
+        self.mahal_threshold = float(self.get_parameter('mahal_threshold').value)
 
         self.state = np.array(
             [
@@ -172,7 +177,7 @@ class EkfLocalization(Node):
 
     def marker_cb(self, msg) -> None:
         # Process ArUco measurements immediately (no warm-up)
-        observations: list[tuple[np.ndarray, float]] = []
+        observations: list[tuple[np.ndarray, float, int]] = []
         for marker in getattr(msg, 'markers', []):
             marker_id = self._get_marker_id(marker)
             if marker_id is None or marker_id not in self.marker_map:
@@ -190,32 +195,22 @@ class EkfLocalization(Node):
                 except Exception:
                     # fallback: estimate from marker_pose in camera (distance from camera origin)
                     distance = float(np.linalg.norm(marker_pose))
-                observations.append((robot_pose, distance))
+                observations.append((robot_pose, distance, marker_id))
 
         if not observations:
             self.last_marker_observations = []
             return
+        # If several markers are visible, trust only the closest one.
+        chosen_pose, chosen_dist, chosen_id = min(observations, key=lambda it: it[1])
 
-        # observations contains tuples (pose, distance); average both pose and distance
-        xs = [pose[0][0] for pose in observations]
-        ys = [pose[0][1] for pose in observations]
-        thetas = [pose[0][2] for pose in observations]
-        dists = [pose[1] for pose in observations]
-
-        mean_x = float(sum(xs) / len(xs))
-        mean_y = float(sum(ys) / len(ys))
-        mean_theta = math.atan2(sum(math.sin(theta) for theta in thetas), sum(math.cos(theta) for theta in thetas))
-        mean_dist = float(sum(dists) / len(dists))
-
-        # Debug logging: show computed robot pose from marker and measured distance
         try:
             self.get_logger().info(
-                f'ArUco observation -> robot_pose_from_marker=({mean_x:.2f}, {mean_y:.2f}, {mean_theta:.2f}), distance={mean_dist:.2f}m'
+                f'ArUco observation -> marker_id={chosen_id}, robot_pose_from_marker=({chosen_pose[0]:.2f}, {chosen_pose[1]:.2f}, {chosen_pose[2]:.2f}), distance={chosen_dist:.2f}m'
             )
         except Exception:
             pass
 
-        self.last_marker_observations = [(np.array([mean_x, mean_y, mean_theta], dtype=float), mean_dist)]
+        self.last_marker_observations = [(np.array(chosen_pose, dtype=float), chosen_dist)]
 
     def _get_marker_id(self, marker) -> int | None:
         marker_id = getattr(marker, 'id', None)
@@ -261,7 +256,14 @@ class EkfLocalization(Node):
             obs_tuple = self.last_marker_observations[0]
             if isinstance(obs_tuple, tuple):
                 obs, dist = obs_tuple
-                self._update(obs, dist)
+                # If a minimum update distance is configured, skip updates for farther markers
+                if self.aruco_update_min_dist > 0.0 and dist > float(self.aruco_update_min_dist):
+                    try:
+                        self.get_logger().debug(f'Skipping ArUco update: dist={dist:.2f} > min_dist={self.aruco_update_min_dist:.2f}')
+                    except Exception:
+                        pass
+                else:
+                    self._update(obs, dist)
             else:
                 # backward compatibility: if older format, use as-is
                 self._update(obs_tuple)
@@ -338,6 +340,38 @@ class EkfLocalization(Node):
 
         s_matrix = self.covariance + measurement_covariance
         gain = self.covariance @ np.linalg.inv(s_matrix)
+
+        # Debug: log measurement covariance and gain diagonal to inspect influence
+        try:
+            self.get_logger().info(
+                f'ArUco update -> dist={dist:.2f}m, R_diag={np.diag(measurement_covariance)}, gain_diag={np.diag(gain)}'
+            )
+        except Exception:
+            pass
+
+        # Mahalanobis gating: reject measurements that are inconsistent with current state
+        try:
+            inv_s = np.linalg.inv(s_matrix)
+            mahalanobis = float(innovation.T @ inv_s @ innovation)
+        except Exception:
+            mahalanobis = float('inf')
+
+        if mahalanobis > self.mahal_threshold:
+            try:
+                self.get_logger().warning(
+                    f'Rejecting ArUco update: mahalanobis={mahalanobis:.2f} > {self.mahal_threshold}, dist={dist:.2f}m'
+                )
+            except Exception:
+                pass
+            return
+
+        # Debug: log measurement covariance and Kalman gain diagonal
+        try:
+            self.get_logger().debug(
+                f'R_diag={np.diag(measurement_covariance)}, gain_diag={np.diag(gain)}, mahalanobis={mahalanobis:.2f}'
+            )
+        except Exception:
+            pass
 
         self.state = self.state + gain @ innovation
         self.state[2] = normalize_angle(float(self.state[2]))
