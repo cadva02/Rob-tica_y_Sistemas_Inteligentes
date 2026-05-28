@@ -34,6 +34,7 @@ class PointStabilizer(Node):
         self.declare_parameter('angle_tolerance', 0.03)
         self.declare_parameter('heading_threshold', 0.35)
         self.declare_parameter('large_distance_threshold', 0.35)
+        self.declare_parameter('goal_reached_confirm_cycles', 8)
 
         self.goal_x = float(self.get_parameter('goal_x').value)  # type: ignore
         self.goal_y = float(self.get_parameter('goal_y').value)  # type: ignore
@@ -55,6 +56,7 @@ class PointStabilizer(Node):
         self.angle_tolerance = float(self.get_parameter('angle_tolerance').value)  # type: ignore
         self.heading_threshold = float(self.get_parameter('heading_threshold').value)  # type: ignore
         self.large_distance_threshold = float(self.get_parameter('large_distance_threshold').value)  # type: ignore
+        self.goal_reached_confirm_cycles = int(self.get_parameter('goal_reached_confirm_cycles').value)  # type: ignore
 
         self.x = 0.0
         self.y = 0.0
@@ -67,6 +69,7 @@ class PointStabilizer(Node):
         self.prev_error_x = 0.0
         self.prev_error_theta = 0.0
         self.prev_heading_error = 0.0
+        self.goal_in_tolerance_count = 0
 
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.error_pub = self.create_publisher(Vector3, 'pose_error', 10)
@@ -103,6 +106,7 @@ class PointStabilizer(Node):
         self.prev_error_x = 0.0
         self.prev_error_theta = 0.0
         self.prev_heading_error = 0.0
+        self.goal_in_tolerance_count = 0
         self.get_logger().info(
             f'New setpoint received: ({self.goal_x:.2f}, {self.goal_y:.2f}, {self.goal_theta:.2f}) | Current pos: ({self.x:.2f}, {self.y:.2f})'
         )
@@ -128,14 +132,20 @@ class PointStabilizer(Node):
         goal_reached = False
         
         if distance_error < self.position_tolerance and abs(angle_error) < self.angle_tolerance:
-            # Goal reached
-            cmd.linear.x = 0.0
-            cmd.angular.z = 0.0
-            self.integral_error_x = 0.0
-            self.integral_error_theta = 0.0
-            goal_reached = True
-            self.get_logger().info(f'Goal reached! Distance: {distance_error:.3f}m, Angle error: {angle_error:.3f}rad')
+            self.goal_in_tolerance_count += 1
+            # Goal reached only after N consecutive in-tolerance cycles.
+            if self.goal_in_tolerance_count >= max(1, self.goal_reached_confirm_cycles):
+                cmd.linear.x = 0.0
+                cmd.angular.z = 0.0
+                self.integral_error_x = 0.0
+                self.integral_error_theta = 0.0
+                goal_reached = True
+                self.get_logger().info(
+                    f'Goal reached! Distance: {distance_error:.3f}m, Angle error: {angle_error:.3f}rad '
+                    f'({self.goal_in_tolerance_count} stable cycles)'
+                )
         else:
+            self.goal_in_tolerance_count = 0
             dt = 1.0 / float(self.get_parameter('control_rate').value)  # type: ignore
 
             # If the waypoint is far away, stop and point directly to it first.

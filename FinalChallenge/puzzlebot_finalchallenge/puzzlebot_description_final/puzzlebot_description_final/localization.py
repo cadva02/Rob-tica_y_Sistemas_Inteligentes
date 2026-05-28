@@ -8,12 +8,7 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from std_msgs.msg import Float32
 from tf2_ros import TransformBroadcaster
-from visualization_msgs.msg import MarkerArray as VizMarkerArray
-
-try:
-    from aruco_msgs.msg import MarkerArray as ArucoMarkerArray  # type: ignore[reportMissingImports]
-except ImportError:  # pragma: no cover - optional at runtime
-    ArucoMarkerArray = None
+from visualization_msgs.msg import MarkerArray
 
 
 def normalize_angle(angle: float) -> float:
@@ -48,7 +43,7 @@ def quaternion_to_yaw(orientation) -> float:
 
 
 class EkfLocalization(Node):
-    """EKF localization using wheel encoders and landmark pose observations."""
+    """EKF localization using wheel encoders and ArUco pose observations."""
 
     def __init__(self) -> None:
         super().__init__('localisation_ekf')
@@ -66,18 +61,23 @@ class EkfLocalization(Node):
         self.declare_parameter('theta0', 0.0)
         self.declare_parameter('odom_frame', 'odom')
         self.declare_parameter('base_frame', 'base_footprint')
+        self.declare_parameter('wr_topic', 'VelocityEncR')
+        self.declare_parameter('wl_topic', 'VelocityEncL')
         self.declare_parameter('camera_base_x', 0.1241)
         self.declare_parameter('camera_base_y', 0.0)
         self.declare_parameter('camera_base_theta', 0.0)
         self.declare_parameter('aruco_topic', '/aruco_markers')
-        self.declare_parameter('landmark_message_type', 'aruco')
-        self.declare_parameter('publish_dead_reckoning_aux', True)
+        # How much to scale measurement variance with distance (linear factor per meter)
+        self.declare_parameter('aruco_distance_gain', 0.5)
+        self.declare_parameter('aruco_theta_distance_gain', 0.5)
         self.declare_parameter(
             'marker_map_json',
             json.dumps(
                 [
-                    {'id': 1, 'x': 4.2, 'y': 2.0, 'theta': 0.0},
-                    {'id': 3, 'x': 0.00, 'y': 2.20, 'theta': math.pi / 2.0},
+                    {'id': 0, 'x': 2.5, 'y': -0.5, 'theta': math.pi},
+                    {'id': 1, 'x': 2.5, 'y': 2.5, 'theta': 3.0 * math.pi / 2.0},
+                    {'id': 2, 'x': -0.5, 'y': 2.5, 'theta': 0.0},
+                    {'id': 3, 'x': -0.5, 'y': -0.5, 'theta': math.pi / 2.0},
                 ]
             ),
         )
@@ -105,9 +105,15 @@ class EkfLocalization(Node):
 
         marker_map_json = str(self.get_parameter('marker_map_json').value)
         self.marker_map = self._parse_marker_map(marker_map_json)
+        self.wr_topic = str(self.get_parameter('wr_topic').value)
+        self.wl_topic = str(self.get_parameter('wl_topic').value)
         self.aruco_topic = str(self.get_parameter('aruco_topic').value)
-        self.landmark_message_type = str(self.get_parameter('landmark_message_type').value)
-        self.publish_dead_reckoning_aux = bool(self.get_parameter('publish_dead_reckoning_aux').value)
+
+        # No warm-up: use ArUco observations immediately
+
+        # Read aruco distance scaling parameters
+        self.aruco_distance_gain = float(self.get_parameter('aruco_distance_gain').value)
+        self.aruco_theta_distance_gain = float(self.get_parameter('aruco_theta_distance_gain').value)
 
         self.state = np.array(
             [
@@ -122,40 +128,20 @@ class EkfLocalization(Node):
 
         self.wr = 0.0
         self.wl = 0.0
-        self.last_marker_observations: list[np.ndarray] = []
+        # last_marker_observations stores tuples: (pose_array, distance_m)
+        self.last_marker_observations: list[tuple[np.ndarray, float]] = []
 
         self.tf_broadcaster = TransformBroadcaster(self)
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
-        self.odom_dr_pub = self.create_publisher(Odometry, 'odom_dr', 10)
-        self.wr_sub = self.create_subscription(Float32, 'wr', self.wr_cb, 10)
-        self.wl_sub = self.create_subscription(Float32, 'wl', self.wl_cb, 10)
-
-        if self.landmark_message_type == 'visualization':
-            self.marker_sub = self.create_subscription(
-                VizMarkerArray,
-                self.aruco_topic,
-                self.marker_cb,
-                10,
-            )
-        elif ArucoMarkerArray is not None:
-            self.marker_sub = self.create_subscription(
-                ArucoMarkerArray,
-                self.aruco_topic,
-                self.marker_cb,
-                10,
-            )
-        else:
-            self.marker_sub = None
-            self.get_logger().warning(
-                'aruco_msgs is not available; EKF will wait for landmark observations on '
-                f'{self.aruco_topic}'
-            )
+        self.wr_sub = self.create_subscription(Float32, self.wr_topic, self.wr_cb, 10)
+        self.wl_sub = self.create_subscription(Float32, self.wl_topic, self.wl_cb, 10)
+        self.marker_sub = self.create_subscription(MarkerArray, self.aruco_topic, self.marker_cb, 10)
 
         self.timer = self.create_timer(self.sample_time, self.timer_cb)
 
         self.get_logger().info(
-            'EKF localization started | odom_frame=%s, base_frame=%s, markers=%d, aruco_topic=%s'
-            % (self.odom_frame, self.base_frame, len(self.marker_map), self.aruco_topic)
+            'EKF localization started | odom_frame=%s, base_frame=%s, wr=%s, wl=%s, markers=%d, aruco_topic=%s'
+            % (self.odom_frame, self.base_frame, self.wr_topic, self.wl_topic, len(self.marker_map), self.aruco_topic)
         )
 
     def _parse_marker_map(self, marker_map_json: str) -> dict[int, np.ndarray]:
@@ -185,7 +171,8 @@ class EkfLocalization(Node):
         self.wl = float(msg.data)
 
     def marker_cb(self, msg) -> None:
-        observations: list[np.ndarray] = []
+        # Process ArUco measurements immediately (no warm-up)
+        observations: list[tuple[np.ndarray, float]] = []
         for marker in getattr(msg, 'markers', []):
             marker_id = self._get_marker_id(marker)
             if marker_id is None or marker_id not in self.marker_map:
@@ -197,9 +184,38 @@ class EkfLocalization(Node):
 
             robot_pose = self._robot_pose_from_marker(marker_id, marker_pose)
             if robot_pose is not None:
-                observations.append(robot_pose)
+                # Detector encodes estimated marker distance (meters) in marker.scale.x
+                try:
+                    distance = float(getattr(marker, 'scale').x)
+                except Exception:
+                    # fallback: estimate from marker_pose in camera (distance from camera origin)
+                    distance = float(np.linalg.norm(marker_pose))
+                observations.append((robot_pose, distance))
 
-        self.last_marker_observations = observations
+        if not observations:
+            self.last_marker_observations = []
+            return
+
+        # observations contains tuples (pose, distance); average both pose and distance
+        xs = [pose[0][0] for pose in observations]
+        ys = [pose[0][1] for pose in observations]
+        thetas = [pose[0][2] for pose in observations]
+        dists = [pose[1] for pose in observations]
+
+        mean_x = float(sum(xs) / len(xs))
+        mean_y = float(sum(ys) / len(ys))
+        mean_theta = math.atan2(sum(math.sin(theta) for theta in thetas), sum(math.cos(theta) for theta in thetas))
+        mean_dist = float(sum(dists) / len(dists))
+
+        # Debug logging: show computed robot pose from marker and measured distance
+        try:
+            self.get_logger().info(
+                f'ArUco observation -> robot_pose_from_marker=({mean_x:.2f}, {mean_y:.2f}, {mean_theta:.2f}), distance={mean_dist:.2f}m'
+            )
+        except Exception:
+            pass
+
+        self.last_marker_observations = [(np.array([mean_x, mean_y, mean_theta], dtype=float), mean_dist)]
 
     def _get_marker_id(self, marker) -> int | None:
         marker_id = getattr(marker, 'id', None)
@@ -233,21 +249,22 @@ class EkfLocalization(Node):
         if marker_pose_in_world is None:
             return None
 
-        camera_pose_in_base = self.camera_base_pose
-        base_pose_in_camera = inverse_pose(camera_pose_in_base)
-        marker_pose_in_camera_inv = inverse_pose(marker_pose_in_camera)
-        robot_pose = compose_pose(marker_pose_in_world, compose_pose(marker_pose_in_camera_inv, base_pose_in_camera))
+        # `marker_pose_in_camera` already represents the marker pose expressed in the camera frame.
+        # Use it directly, then apply the fixed camera-to-base offset.
+        base_pose_in_camera = inverse_pose(self.camera_base_pose)
+        robot_pose = compose_pose(marker_pose_in_world, compose_pose(marker_pose_in_camera, base_pose_in_camera))
         return robot_pose
 
     def timer_cb(self) -> None:
-        dead_reckoning_state, dead_reckoning_covariance = self._predict()
-
-        if self.publish_dead_reckoning_aux:
-            self._publish_dead_reckoning_state(dead_reckoning_state, dead_reckoning_covariance)
-
+        self._predict()
         if self.last_marker_observations:
-            for observation in self.last_marker_observations:
-                self._update(observation)
+            obs_tuple = self.last_marker_observations[0]
+            if isinstance(obs_tuple, tuple):
+                obs, dist = obs_tuple
+                self._update(obs, dist)
+            else:
+                # backward compatibility: if older format, use as-is
+                self._update(obs_tuple)
             self.last_marker_observations = []
 
         self._publish_state()
@@ -288,7 +305,7 @@ class EkfLocalization(Node):
         self.covariance = 0.5 * (self.covariance + self.covariance.T)
         return self.state.copy(), self.covariance.copy()
 
-    def _update(self, observation: np.ndarray) -> None:
+    def _update(self, observation: np.ndarray, distance: float | None = None) -> None:
         measurement = np.array(
             [float(observation[0]), float(observation[1]), float(observation[2])],
             dtype=float,
@@ -297,8 +314,26 @@ class EkfLocalization(Node):
         innovation = measurement - self.state
         innovation[2] = normalize_angle(float(innovation[2]))
 
+        # Debug logging: show measurement and innovation before update
+        try:
+            self.get_logger().info(
+                f'EKF update -> measurement=({measurement[0]:.2f}, {measurement[1]:.2f}, {measurement[2]:.2f}), '
+                f'innovation=({innovation[0]:.2f}, {innovation[1]:.2f}, {innovation[2]:.2f})'
+            )
+        except Exception:
+            pass
+
+        # adapt measurement covariance based on measured marker distance (meters)
+        if distance is None:
+            dist = 0.0
+        else:
+            dist = float(distance)
+
+        factor_xy = max(1.0, 1.0 + self.aruco_distance_gain * dist)
+        factor_theta = max(1.0, 1.0 + self.aruco_theta_distance_gain * dist)
+
         measurement_covariance = np.diag(
-            [self.sigma_obs_x**2, self.sigma_obs_y**2, self.sigma_obs_theta**2]
+            [self.sigma_obs_x**2 * factor_xy, self.sigma_obs_y**2 * factor_xy, self.sigma_obs_theta**2 * factor_theta]
         ).astype(float)
 
         s_matrix = self.covariance + measurement_covariance
@@ -313,9 +348,6 @@ class EkfLocalization(Node):
 
     def _publish_state(self) -> None:
         self._publish_odom_message(self.odom_pub, self.state, self.covariance, publish_tf=True)
-
-    def _publish_dead_reckoning_state(self, state: np.ndarray, covariance: np.ndarray) -> None:
-        self._publish_odom_message(self.odom_dr_pub, state, covariance, publish_tf=False)
 
     def _publish_odom_message(
         self,

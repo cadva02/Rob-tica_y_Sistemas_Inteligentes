@@ -1,3 +1,4 @@
+import json
 import math
 
 import rclpy
@@ -19,16 +20,23 @@ class SetPointGenerator(Node):
         self.declare_parameter('side_length', 0.8)
         self.declare_parameter('start_x', 0.0)
         self.declare_parameter('start_y', 0.0)
+        self.declare_parameter('min_waypoint_time_sec', 1.5)
+        self.declare_parameter('custom_waypoints_json', '[]')
 
         self.publish_rate = float(self.get_parameter('publish_rate').value)  # type: ignore
         self.trajectory_type = str(self.get_parameter('trajectory_type').value)  # type: ignore
         self.side_length = float(self.get_parameter('side_length').value)  # type: ignore
         self.start_x = float(self.get_parameter('start_x').value)  # type: ignore
         self.start_y = float(self.get_parameter('start_y').value)  # type: ignore
+        self.min_waypoint_time_sec = float(self.get_parameter('min_waypoint_time_sec').value)  # type: ignore
+        self.custom_waypoints_json = str(self.get_parameter('custom_waypoints_json').value)  # type: ignore
 
         self.points = self._build_points(self.trajectory_type)
         self.current_index = 0
-        self.last_reached = False
+        # Initialize as True so any latched 'goal_reached' True at startup
+        # does not advance the waypoint index unexpectedly.
+        self.last_reached = True
+        self.current_waypoint_start_time = float(self.get_clock().now().nanoseconds) * 1e-9
 
         self.set_point_pub = self.create_publisher(Vector3, 'next_point', 10)
         marker_qos = QoSProfile(
@@ -73,14 +81,19 @@ class SetPointGenerator(Node):
             (x0, y0, 4 * math.pi / 3),
         ]
 
+        custom_points = self._parse_custom_waypoints()
+
         # store groups for marker publication
         self._square_points = square_points
         self._triangle_points = triangle_points
+        self._custom_points = custom_points
 
         if trajectory_type == 'square':
             return square_points
         elif trajectory_type == 'triangle':
             return triangle_points
+        elif trajectory_type == 'custom':
+            return custom_points
         elif trajectory_type == 'both':
             # Combine both: square then triangle in loop
             return square_points + triangle_points
@@ -88,10 +101,53 @@ class SetPointGenerator(Node):
             self.get_logger().warning(f'Unknown trajectory type: {trajectory_type}, using square')
             return square_points
 
+    def _parse_custom_waypoints(self) -> list[tuple[float, float, float]]:
+        """Parse custom waypoints from a JSON parameter."""
+        default_points = [
+            (0.0, 0.0, 0.0),                 # (0,0) heading east
+            (3.0, 0.0, math.pi / 2.0),       # (3,0) heading north
+            (3.0, 2.0, math.pi),             # (3,2) heading west
+            (0.0, 2.0, -math.pi / 2.0),      # (0,2) heading south
+            (0.0, 0.0, 0.0),                 # back to (0,0) heading east
+        ]
+
+        try:
+            raw_points = json.loads(self.custom_waypoints_json)
+        except json.JSONDecodeError:
+            self.get_logger().warning('custom_waypoints_json is invalid; using default rectangle')
+            return default_points
+
+        parsed_points: list[tuple[float, float, float]] = []
+        try:
+            for point in raw_points:
+                if isinstance(point, dict):
+                    x = float(point['x'])
+                    y = float(point['y'])
+                    theta = float(point.get('theta', 0.0))
+                else:
+                    x = float(point[0])
+                    y = float(point[1])
+                    theta = float(point[2]) if len(point) > 2 else 0.0
+                parsed_points.append((x, y, theta))
+        except (KeyError, TypeError, ValueError, IndexError):
+            self.get_logger().warning('custom_waypoints_json has invalid entries; using default rectangle')
+            return default_points
+
+        return parsed_points or default_points
+
     def goal_reached_cb(self, msg: Bool) -> None:
         """Called when goal is reached. Move to next waypoint."""
         if msg.data and not self.last_reached:
+            now = float(self.get_clock().now().nanoseconds) * 1e-9
+            elapsed = now - self.current_waypoint_start_time
+            if elapsed < self.min_waypoint_time_sec:
+                self.get_logger().warning(
+                    f'Ignoring early goal_reached edge ({elapsed:.2f}s < {self.min_waypoint_time_sec:.2f}s) at waypoint {self.current_index}'
+                )
+                self.last_reached = msg.data
+                return
             self.current_index = (self.current_index + 1) % len(self.points)
+            self.current_waypoint_start_time = now
             x, y, theta = self.points[self.current_index]
             self.get_logger().info(
                 f'Goal reached! Moving to waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
@@ -106,6 +162,9 @@ class SetPointGenerator(Node):
         msg.y = float(y)
         msg.z = float(theta)
         self.set_point_pub.publish(msg)
+        # Log current published waypoint at a low rate for debugging
+        if self.current_index == 0:
+            self.get_logger().info(f'Publishing initial waypoint: ({x:.2f}, {y:.2f}, {theta:.2f})')
 
     def publish_waypoint_markers(self) -> None:
         """Publish visualization markers for the active trajectory waypoints."""
@@ -180,6 +239,10 @@ class SetPointGenerator(Node):
             active_points = getattr(self, '_square_points', [])
             marker_namespace = f'{namespace}/square' if namespace else 'square'
             color = (1.0, 0.0, 0.0)
+        elif self.trajectory_type == 'custom':
+            active_points = getattr(self, '_custom_points', [])
+            marker_namespace = f'{namespace}/custom' if namespace else 'custom'
+            color = (0.0, 0.0, 1.0)  # Blue for custom trajectory
         else:
             active_points = getattr(self, '_square_points', []) + getattr(self, '_triangle_points', [])
             marker_namespace = f'{namespace}/trajectory' if namespace else 'trajectory'

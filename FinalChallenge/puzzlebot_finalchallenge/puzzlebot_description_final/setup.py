@@ -40,9 +40,11 @@ setup(
             'setpoint_generator = puzzlebot_description_final.setpoint_generator:main',
             'kinematic_simulator = puzzlebot_description_final.kinematic_simulator:main',
             'point_stabilizer = puzzlebot_description_final.point_stabilizer:main',
+            'point_tracker = puzzlebot_description_final.point_tracker:main',
             'obstacle_avoidance = puzzlebot_description_final.obstacle_avoidance:main',
             'obstacle_avoidance_bug2 = puzzlebot_description_final.obstacle_avoidance_bug2:main',
             'simulated_landmarks = puzzlebot_description_final.simulated_landmarks:main',
+            'gazebo_aruco_detector = puzzlebot_description_final.gazebo_aruco_detector:main',
         ],
     },
 )

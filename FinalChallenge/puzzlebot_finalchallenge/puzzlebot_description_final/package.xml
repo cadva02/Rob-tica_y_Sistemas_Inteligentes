@@ -18,6 +18,8 @@
   <depend>python3-transforms3d</depend>
   <depend>aruco_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
   <depend>rclpy</depend>
   <depend>robot_state_publisher</depend>
   <depend>joint_state_publisher_gui</depend>
