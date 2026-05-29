@@ -16,7 +16,7 @@ def generate_launch_description():
 
     declare_world_arg = DeclareLaunchArgument(
         'world',
-        default_value='puzzlebot_route_markers.world',
+        default_value='puzzlebot_office.world',
         description='Gazebo world with route goals and guide markers'
     )
     declare_robot_arg = DeclareLaunchArgument(
@@ -29,17 +29,16 @@ def generate_launch_description():
         default_value='Puzzlebot1',
         description='Instance name used by Gazebo'
     )
-    declare_x_arg = DeclareLaunchArgument('x', default_value='0.0')
-    declare_y_arg = DeclareLaunchArgument('y', default_value='2.0')
+    declare_x_arg = DeclareLaunchArgument('x', default_value='-2.5')
+    declare_y_arg = DeclareLaunchArgument('y', default_value='-3.0')
     declare_yaw_arg = DeclareLaunchArgument('yaw', default_value='0.0')
     declare_marker_map_arg = DeclareLaunchArgument(
         'marker_map_json',
         default_value=json.dumps([
-            {'id': 0, 'x': 2.0, 'y': -2.0, 'theta': 1.5708},
-            {'id': 1, 'x': 1.0, 'y': 2.0, 'theta': 3.141592654},
-            {'id': 2, 'x': -0.5, 'y': 2.5, 'theta': -1.5708},
-            {'id': 3, 'x': -0.5, 'y': -0.5, 'theta': 0.0},
-            {'id': 4, 'x': 3.0, 'y': -0.4, 'theta': -2.5562},
+            {'id': 0, 'x': 2.5, 'y': -1.5, 'theta': 1.5708},
+            {'id': 1, 'x': -2.5, 'y': 0.0, 'theta': 3.141592654},
+            {'id': 2, 'x': -2.5, 'y': 2.5, 'theta': -1.5708},
+            {'id': 3, 'x': 4.5, 'y': 3.5, 'theta': 0.7854},
         ]),
         description='ArUco marker map as JSON list with id, x, y, theta'
     )
@@ -99,8 +98,8 @@ def generate_launch_description():
             'camera_base_x': 0.1241,
             'camera_base_y': 0.0,
             'camera_base_theta': 0.0,
-            'x0': 0.0,
-            'y0': 2.0,
+            'x0': -2.5,
+            'y0': -3.0,
             'theta0': 0.0,
             'sigma_v': 0.003,
             'sigma_w': 0.03,
@@ -110,7 +109,7 @@ def generate_launch_description():
             'aruco_distance_gain': 1.5,
             'aruco_theta_distance_gain': 1.5,
             'aruco_update_min_dist': 2.5,
-            'mahal_threshold': 12.0,
+            'mahal_threshold': 24.0,
         }],
     )
 
@@ -138,35 +137,41 @@ def generate_launch_description():
             'use_sim_time': True,
             'trajectory_type': 'custom',
             'side_length': 2.0,
-            'start_x': 0.0,
-            'start_y': 2.0,
+            'start_x': -2.5,
+            'start_y': -3.0,
             'publish_rate': 2.0,
             'min_waypoint_time_sec': 2.0,
             'custom_waypoints_json': json.dumps([
-                {'x': 0.0, 'y': 2.0, 'theta': -0.4636476090008061},
-                {'x': 1.0, 'y': 1.5, 'theta': -0.7853981633974483},
-                {'x': 2.5, 'y': 0.0, 'theta': -2.0344439357957027},
-                {'x': 2.0, 'y': -1.0, 'theta': 3.141592653589793},
-                {'x': -1.0, 'y': -1.0, 'theta': 1.2490457723982544},
-                {'x': 0.0, 'y': 2.0, 'theta': 0.0},
+                {'x': -0.95, 'y': -3.8, 'theta': 1.5708},
+                {'x': 0.5, 'y': 0.0, 'theta': 3.141592654},
+                {'x': -1.0, 'y': 1.0, 'theta': -1.5708},
+                {'x': -1.0, 'y': 3.8, 'theta': 0.0},
             ]),
         }],
     )
 
-    point_stabilizer_node = Node(
+    obstacle_avoidance_node = Node(
         package='puzzlebot_description_final',
-        executable='point_stabilizer',
-        name='point_stabilizer',
+        executable='obstacle_avoidance',
+        name='obstacle_avoidance_bug0',
         output='screen',
         parameters=[{
             'use_sim_time': True,
-            'control_rate': 20.0,
-            'position_tolerance': 0.05,
-            'angle_tolerance': 0.05,
+            'publish_rate': 20.0,
+            'linear_speed': 0.15,
+            'angular_speed': 0.45,
             'goal_x': 0.0,
             'goal_y': 0.0,
             'goal_theta': 0.0,
-            'goal_reached_confirm_cycles': 8,
+            'goal_tolerance': 0.15,
+            'yaw_tolerance': 0.25,
+            'obstacle_distance': 0.40,
+            'wall_dist_target': 0.35,
+            'front_angle': 40.0,
+            'kp_wall': 1.0,
+            'wall_ang_limit': 0.8,
+            'obstacle_detection_count': 3,
+            'wall_exit_suppression': 1.0,
         }],
     )
 
@@ -193,6 +198,6 @@ def generate_launch_description():
         detector_node,
         localization_node,
         setpoint_generator_node,
-        point_stabilizer_node,
+        obstacle_avoidance_node,
         rviz_node,
     ])

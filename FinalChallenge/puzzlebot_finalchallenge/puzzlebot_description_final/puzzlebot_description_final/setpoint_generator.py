@@ -33,9 +33,8 @@ class SetPointGenerator(Node):
 
         self.points = self._build_points(self.trajectory_type)
         self.current_index = 0
-        # Initialize as True so any latched 'goal_reached' True at startup
-        # does not advance the waypoint index unexpectedly.
-        self.last_reached = True
+        # Start as False so the first real 'goal_reached' pulse advances the route.
+        self.last_reached = False
         self.current_waypoint_start_time = float(self.get_clock().now().nanoseconds) * 1e-9
 
         self.set_point_pub = self.create_publisher(Vector3, 'next_point', 10)
@@ -146,12 +145,18 @@ class SetPointGenerator(Node):
                 )
                 self.last_reached = msg.data
                 return
-            self.current_index = (self.current_index + 1) % len(self.points)
-            self.current_waypoint_start_time = now
-            x, y, theta = self.points[self.current_index]
-            self.get_logger().info(
-                f'Goal reached! Moving to waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
-            )
+            if self.current_index < len(self.points) - 1:
+                self.current_index += 1
+                self.current_waypoint_start_time = now
+                x, y, theta = self.points[self.current_index]
+                self.get_logger().info(
+                    f'Goal reached! Moving to waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
+                )
+            else:
+                x, y, theta = self.points[self.current_index]
+                self.get_logger().info(
+                    f'Final waypoint reached. Holding position at waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
+                )
         self.last_reached = msg.data
 
     def timer_cb(self) -> None:

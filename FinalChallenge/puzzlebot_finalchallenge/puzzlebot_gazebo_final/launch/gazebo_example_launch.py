@@ -20,7 +20,7 @@ from launch.conditions import IfCondition, UnlessCondition
 def generate_launch_description():
 
     # World and robot file names
-    world_file = 'puzzlebot_arena.world'
+    world_file = 'puzzlebot_office.world'
     robot = 'puzzlebot_jetson_lidar_ed'
 
     # Robot's initial position

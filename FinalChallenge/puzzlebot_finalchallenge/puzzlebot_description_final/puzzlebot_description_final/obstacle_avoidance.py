@@ -183,6 +183,14 @@ class ObstacleAvoidanceBug0(Node):
         if (now - self.last_wall_exit_time) < self.wall_exit_suppression and self.state != 'WALL_FOLLOWING':
             obstacle_ahead = False
 
+        # El wall follower solo debe ser una evasión temporal.
+        # En cuanto el frente vuelva a estar libre, regresamos a perseguir la meta.
+        if self.state == 'WALL_FOLLOWING' and not obstacle_ahead:
+            self.get_logger().info('[BUG 0] Frente despejado. Retomando seguimiento de setpoint.')
+            self.state = 'GIRAR_HACIA_META'
+            self.hit_distance = float('inf')
+            self.last_wall_exit_time = now
+
         # --- MÁQUINA DE ESTADOS BUG 0 ---
         if self.state == 'GIRAR_HACIA_META':
             if obstacle_ahead:
@@ -214,22 +222,7 @@ class ObstacleAvoidanceBug0(Node):
 
         elif self.state == 'WALL_FOLLOWING':
             self.wall_follow_side = self.select_wall_side()
-            # Evaluar si el camino directo hacia la meta está completamente limpio
-            path_clear = self.is_path_to_goal_clear(heading)
-            
-            # Condición estricta de escape de Bug 0: Frente despejado Y estar más cerca que cuando impactamos
-            if not obstacle_ahead and path_clear and distance < (self.hit_distance - 0.10):
-                self.get_logger().info('[BUG 0] Escape válido. Volviendo a orientarse a la meta.')
-                self.state = 'GIRAR_HACIA_META'
-                self.hit_distance = float('inf')
-                # record wall exit time to avoid immediate re-entry
-                self.last_wall_exit_time = now
-                
-                # Giro inmediato para romper inercia de la pared
-                cmd.linear.x = 0.0
-                cmd.angular.z = np.sign(alpha) * self.angular_speed
-            else:
-                cmd = self.follow_wall(self.wall_follow_side)
+            cmd = self.follow_wall(self.wall_follow_side)
 
         self.cmd_pub.publish(cmd)
 
@@ -303,56 +296,82 @@ class ObstacleAvoidanceBug0(Node):
         return float(np.min(vals)) > self.obstacle_distance
 
     def follow_wall(self, wall_side: str = 'RIGHT') -> Twist:
+        """Wall-following adapted from the provided Webots-style controller.
+
+        Uses LIDAR sectors to emulate three distance sensors (ps5, ps6, ps7):
+         - ps5: left-side sector (90 deg)
+         - ps6: front-left sector (45 deg)
+         - ps7: front sector (0 deg)
+
+        The original controller computed wheel speeds and converted them
+        to linear/angular. Here we compute the same but clamp the result to
+        the configured `linear_speed` / `angular_speed` parameters.
+        """
         twist = Twist()
-        
+
         if self.latest_scan is None:
             return twist
 
-        scan_front = self._sector_min_range(0.0, self.front_angle / 2.0)
-        scan_left = self._sector_min_range(90.0, 30.0)
-        scan_right = self._sector_min_range(-90.0, 30.0)
+        # Map pseudo-sensors to LIDAR sectors
+        d_ps5 = self._sector_min_range(90.0, 15.0)   # left
+        d_ps6 = self._sector_min_range(45.0, 15.0)   # front-left
+        d_ps7 = self._sector_min_range(0.0, 10.0)    # front
 
-        # SMOOTHED WALL-FOLLOWING (dynamic side selection)
-        frente_libre = scan_front > self.obstacle_distance
+        # Tunable thresholds (derived from existing parameters)
+        FRONT_BLOCKED_THRESHOLD = min(self.obstacle_distance, 0.2) * 0.3
+        LEFT_MIN_DISTANCE = max(0.01, self.wall_dist_target * 0.5)
+        LEFT_MAX_DISTANCE = max(0.02, self.wall_dist_target * 1.5)
+        LEFT_CORNER_THRESHOLD = self.wall_dist_target + 0.05
 
-        if not frente_libre:
-            # Obstacle directly ahead: stop and pivot left to avoid
-            twist.linear.x = 0.0
-            twist.angular.z = self.angular_speed if wall_side == 'RIGHT' else -self.angular_speed
+        # Robot/wheels constants used to convert wheel speeds -> lin/ang
+        MAX_WHEEL_SPEED = 6.28
+        HALF_DISTANCE_BETWEEN_WHEELS = 0.026
+        WHEEL_RADIUS = 0.02
+
+        # Handle infinite/no-readings by treating them as large distances
+        if not math.isfinite(d_ps5):
+            d_ps5 = float('inf')
+        if not math.isfinite(d_ps6):
+            d_ps6 = float('inf')
+        if not math.isfinite(d_ps7):
+            d_ps7 = float('inf')
+
+        front_wall = d_ps7 < FRONT_BLOCKED_THRESHOLD
+        left_corner = d_ps6 < LEFT_CORNER_THRESHOLD
+
+        # Weighted left distance like the original controller
+        left_distance = (d_ps5 * 0.7) + (d_ps6 * 0.3)
+
+        # Decide wheel speeds (as in original controller)
+        if front_wall:
+            left_wheel_speed = MAX_WHEEL_SPEED
+            right_wheel_speed = -MAX_WHEEL_SPEED
+        elif left_distance < LEFT_MIN_DISTANCE:
+            left_wheel_speed = MAX_WHEEL_SPEED
+            right_wheel_speed = -MAX_WHEEL_SPEED / 2.0
+        elif left_distance > LEFT_MAX_DISTANCE:
+            left_wheel_speed = MAX_WHEEL_SPEED / 8.0
+            right_wheel_speed = MAX_WHEEL_SPEED
+        elif left_corner:
+            left_wheel_speed = MAX_WHEEL_SPEED
+            right_wheel_speed = MAX_WHEEL_SPEED / 8.0
         else:
-            # If we have a finite distance to the chosen wall, use P-control
-            if wall_side == 'LEFT':
-                if math.isfinite(scan_left):
-                    error = scan_left - self.wall_dist_target
-                    ang = self.kp_wall * error
-                else:
-                    # No wall detected: gently steer left to re-acquire it
-                    ang = 0.3
-            else:
-                if math.isfinite(scan_right):
-                    error = scan_right - self.wall_dist_target
-                    ang = -self.kp_wall * error
-                else:
-                    # No wall detected: gently steer right to re-acquire it
-                    ang = -0.3
+            left_wheel_speed = MAX_WHEEL_SPEED
+            right_wheel_speed = MAX_WHEEL_SPEED
 
-            # Limit and smooth angular velocity to avoid jitter
-            ang = max(min(ang, self.wall_ang_limit), -self.wall_ang_limit)
-            ang = 0.4 * ang + 0.6 * self.prev_angular
-            self.prev_angular = ang
+        linear_speed = (left_wheel_speed + right_wheel_speed) * 0.5 * WHEEL_RADIUS
+        angular_speed = (right_wheel_speed - left_wheel_speed) * WHEEL_RADIUS / (2.0 * HALF_DISTANCE_BETWEEN_WHEELS)
 
-            # Forward speed reduced when turning sharply or if front is near
-            if abs(ang) > 0.45:
-                lin = self.linear_speed * 0.45
-            else:
-                lin = self.linear_speed * 0.85
+        # Clamp to configured speeds
+        linear_speed = max(min(linear_speed, self.linear_speed), -self.linear_speed)
+        angular_speed = max(min(angular_speed, self.angular_speed), -self.angular_speed)
 
-            if scan_front < (self.obstacle_distance + 0.05):
-                lin *= 0.5
+        self.get_logger().debug(
+            f"ps5={d_ps5:.3f} ps6={d_ps6:.3f} ps7={d_ps7:.3f} left_dist={left_distance:.3f} -> lin={linear_speed:.3f} ang={angular_speed:.3f}"
+        )
 
-            twist.linear.x = max(0.0, min(lin, self.linear_speed))
-            twist.angular.z = ang
-
+        twist.linear.x = linear_speed
+        twist.angular.z = angular_speed
         return twist
 
     def stop_handler(self, signum, frame):
