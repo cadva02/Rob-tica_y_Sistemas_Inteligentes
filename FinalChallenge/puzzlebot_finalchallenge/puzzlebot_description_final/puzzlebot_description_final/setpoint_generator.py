@@ -21,6 +21,7 @@ class SetPointGenerator(Node):
         self.declare_parameter('start_x', 0.0)
         self.declare_parameter('start_y', 0.0)
         self.declare_parameter('min_waypoint_time_sec', 1.5)
+        self.declare_parameter('loop_route', False)
         self.declare_parameter('custom_waypoints_json', '[]')
 
         self.publish_rate = float(self.get_parameter('publish_rate').value)  # type: ignore
@@ -29,6 +30,7 @@ class SetPointGenerator(Node):
         self.start_x = float(self.get_parameter('start_x').value)  # type: ignore
         self.start_y = float(self.get_parameter('start_y').value)  # type: ignore
         self.min_waypoint_time_sec = float(self.get_parameter('min_waypoint_time_sec').value)  # type: ignore
+        self.loop_route = bool(self.get_parameter('loop_route').value)  # type: ignore
         self.custom_waypoints_json = str(self.get_parameter('custom_waypoints_json').value)  # type: ignore
 
         self.points = self._build_points(self.trajectory_type)
@@ -151,6 +153,13 @@ class SetPointGenerator(Node):
                 x, y, theta = self.points[self.current_index]
                 self.get_logger().info(
                     f'Goal reached! Moving to waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
+                )
+            elif self.loop_route:
+                self.current_index = 0
+                self.current_waypoint_start_time = now
+                x, y, theta = self.points[self.current_index]
+                self.get_logger().info(
+                    f'Goal reached! Looping back to waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
                 )
             else:
                 x, y, theta = self.points[self.current_index]
