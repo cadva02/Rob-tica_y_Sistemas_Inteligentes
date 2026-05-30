@@ -11,6 +11,7 @@ This launch starts:
 The optional `joint_state_publisher_gui` remains available for manual testing,
 but it is disabled by default because the simulator publishes joint states.
 """
+import json
 import os
 
 from launch import LaunchDescription
@@ -74,6 +75,7 @@ def generate_launch_description():
             'start_x': 0.0,
             'start_y': 0.0,
             'publish_rate': 1.0,
+            'loop_route': True,
         }],
     )
 
@@ -110,7 +112,11 @@ def generate_launch_description():
             'pose_topic': 'pose_sim',
             'aruco_topic': '/aruco_markers',
             'visualization_topic': '/sim_landmarks',
-            'max_detection_range': 0.5,
+            'max_detection_range': 1.0,
+            'marker_map_json': json.dumps([
+                {'id': 1, 'x': 4.9, 'y': 0.0, 'theta': 3.141592653589793},
+                {'id': 3, 'x': -0.9, 'y': 4.0, 'theta': 0.0},
+            ]),
             'publish_rate': 10.0,
         }],
     )
@@ -124,8 +130,29 @@ def generate_launch_description():
             'wheel_radius': 0.05,
             'wheel_base': 0.19,
             'sample_time': 0.02,
-            'publish_dead_reckoning_aux': False,
-            'landmark_message_type': 'visualization',
+            'odom_frame': 'odom',
+            'base_frame': 'base_footprint',
+            'wr_topic': 'wr',
+            'wl_topic': 'wl',
+            'aruco_topic': '/aruco_markers',
+            'camera_base_x': 0.1241,
+            'camera_base_y': 0.0,
+            'camera_base_theta': 0.0,
+            'sigma_v': 0.25,
+            'sigma_w': 0.25,
+            # Much higher confidence in camera observations for RViz/demo
+            'sigma_obs_x': 0.02,
+            'sigma_obs_y': 0.02,
+            'sigma_obs_theta': 0.05,
+            # Do not inflate observation uncertainty with distance in this simulated demo
+            'aruco_distance_gain': 0.0,
+            'aruco_theta_distance_gain': 0.0,
+            # Keep a finite gate while trusting the perfect simulated landmark
+            'mahal_threshold': 50.0,
+            'marker_map_json': json.dumps([
+                {'id': 1, 'x': 4.9, 'y': 0.0, 'theta': 3.141592653589793},
+                {'id': 3, 'x': -0.9, 'y': 4.0, 'theta': 0.0},
+            ]),
         }],
     )
 
