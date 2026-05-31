@@ -39,7 +39,7 @@ def generate_launch_description():
             {'id': 1, 'x': 0.0, 'y': -3.6, 'theta': 3.141592654},
             {'id': 2, 'x': 3.1, 'y': -2.1, 'theta': 2.4},
             {'id': 3, 'x': -3.9, 'y': 0.8, 'theta': 0.0},
-            {'id': 4, 'x': -3.9, 'y': 3.0, 'theta': 0.0},
+            {'id': 4, 'x': -3.9, 'y': 3.5, 'theta': 0.0},
 
         ]),
         description='ArUco marker map as JSON lst with id, x, y, theta'

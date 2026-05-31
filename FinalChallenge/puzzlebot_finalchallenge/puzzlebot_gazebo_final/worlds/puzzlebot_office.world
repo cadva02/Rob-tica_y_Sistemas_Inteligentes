@@ -114,7 +114,7 @@
     <include>
       <name>marker_4</name>
       <uri>model://aruco_marker_4</uri>
-      <pose>-3.9 3.0 0.091 0 0 0</pose>
+      <pose>-3.9 3.5 0.091 0 0 0</pose>
     </include>
 
     <gui fullscreen='0'>
