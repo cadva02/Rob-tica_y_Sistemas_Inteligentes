@@ -145,7 +145,8 @@ class SetPointGenerator(Node):
                 self.get_logger().warning(
                     f'Ignoring early goal_reached edge ({elapsed:.2f}s < {self.min_waypoint_time_sec:.2f}s) at waypoint {self.current_index}'
                 )
-                self.last_reached = msg.data
+                # Do NOT set self.last_reached here; we ignored the pulse so
+                # we must allow future rising edges to be detected.
                 return
             if self.current_index < len(self.points) - 1:
                 self.current_index += 1
@@ -166,7 +167,9 @@ class SetPointGenerator(Node):
                 self.get_logger().info(
                     f'Final waypoint reached. Holding position at waypoint {self.current_index}/{len(self.points)} -> ({x:.2f}, {y:.2f}, {theta:.2f})'
                 )
-        self.last_reached = msg.data
+        # Do not latch the True edge forever: obstacle_avoidance publishes a single
+        # True pulse per reached waypoint, so we only need a short edge filter.
+        self.last_reached = False
 
     def timer_cb(self) -> None:
         """Publish current setpoint waypoint."""

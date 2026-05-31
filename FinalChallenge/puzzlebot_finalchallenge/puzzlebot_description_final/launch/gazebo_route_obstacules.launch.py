@@ -35,12 +35,14 @@ def generate_launch_description():
     declare_marker_map_arg = DeclareLaunchArgument(
         'marker_map_json',
         default_value=json.dumps([
-            {'id': 0, 'x': -0.95, 'y': -3.8, 'theta': 1.5708},
-            {'id': 1, 'x': 3.5, 'y': 0.0, 'theta': 3.141592654},
-            {'id': 2, 'x': -1.2, 'y': 1.2, 'theta': -0.7854},
-            {'id': 3, 'x': -1.0, 'y': 3.8, 'theta': 0.7854},
+            {'id': 0, 'x': -1.40, 'y': -2.6, 'theta': 3.141592654},
+            {'id': 1, 'x': 0.0, 'y': -3.6, 'theta': 3.141592654},
+            {'id': 2, 'x': 3.1, 'y': -2.1, 'theta': 2.4},
+            {'id': 3, 'x': -3.9, 'y': 0.8, 'theta': 0.0},
+            {'id': 4, 'x': -3.9, 'y': 3.0, 'theta': 0.0},
+
         ]),
-        description='ArUco marker map as JSON list with id, x, y, theta'
+        description='ArUco marker map as JSON lst with id, x, y, theta'
     )
 
     world = LaunchConfiguration('world')
@@ -101,15 +103,15 @@ def generate_launch_description():
             'x0': -2.5,
             'y0': -3.0,
             'theta0': 0.0,
-            'sigma_v': 0.003,
-            'sigma_w': 0.03,
-            'sigma_obs_x': 0.20,
-            'sigma_obs_y': 0.20,
-            'sigma_obs_theta': 0.30,
+            'sigma_v': 0.12,
+            'sigma_w': 0.17,
+            'sigma_obs_x': 0.15,
+            'sigma_obs_y': 0.15,
+            'sigma_obs_theta': 1.55,
             'aruco_distance_gain': 1.5,
             'aruco_theta_distance_gain': 1.5,
-            'aruco_update_min_dist': 2.5,
-            'mahal_threshold': 24.0,
+            'aruco_update_min_dist': 6.0,
+            'mahal_threshold': 10.0,
         }],
     )
 
@@ -137,15 +139,15 @@ def generate_launch_description():
             'use_sim_time': True,
             'trajectory_type': 'custom',
             'side_length': 2.0,
-            'start_x': -2.5,
+            'start_x': -2.3,
             'start_y': -3.0,
             'publish_rate': 2.0,
             'min_waypoint_time_sec': 2.0,
             'custom_waypoints_json': json.dumps([
-                {'x': -0.95, 'y': -3.8, 'theta': 1.5708},
-                {'x': 0.5, 'y': 0.0, 'theta': 3.141592654},
-                {'x': -1.0, 'y': 1.0, 'theta': -1.5708},
-                {'x': -1.0, 'y': 3.8, 'theta': 0.0},
+                {'x': 2.5, 'y': -1.5, 'theta': 3.141592654},
+                {'x': -2.5, 'y': 0.5, 'theta': 1.5708},
+                {'x': -2.5, 'y': 2.5, 'theta': 1.5708},
+                {'x': 4.5, 'y': 3.5, 'theta': 0.0},
             ]),
         }],
     )
@@ -165,8 +167,8 @@ def generate_launch_description():
             'goal_theta': 0.0,
             'goal_tolerance': 0.15,
             'yaw_tolerance': 0.25,
-            'obstacle_distance': 0.40,
-            'wall_dist_target': 0.35,
+            'obstacle_distance': 0.50,
+            'wall_dist_target': 0.43,
             'front_angle': 40.0,
             'kp_wall': 1.0,
             'wall_ang_limit': 0.8,
