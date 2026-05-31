@@ -97,7 +97,7 @@ def generate_launch_description():
             'wl_topic': '/VelocityEncL',
             'aruco_topic': '/aruco_markers',
             'marker_map_json': ParameterValue(marker_map_json, value_type=str),
-            'camera_base_x': 0.1241,
+            'camera_base_x': 0.0241,
             'camera_base_y': 0.0,
             'camera_base_theta': 0.0,
             'x0': -2.5,
@@ -145,7 +145,7 @@ def generate_launch_description():
             'min_waypoint_time_sec': 2.0,
             'custom_waypoints_json': json.dumps([
                 {'x': 2.5, 'y': -1.5, 'theta': 3.141592654},
-                {'x': -2.5, 'y': 0.5, 'theta': 1.5708},
+                {'x': -3.5, 'y': 0.3, 'theta': 0.0},
                 {'x': -2.5, 'y': 2.5, 'theta': 1.5708},
                 {'x': 4.5, 'y': 3.5, 'theta': 0.0},
             ]),
