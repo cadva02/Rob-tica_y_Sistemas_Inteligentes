@@ -14,7 +14,7 @@ class ObstacleAvoidanceBug0(Node):
         super().__init__('obstacle_avoidance_bug0')
 
         # --- PARÁMETROS CONFIGURABLES ---
-        self.declare_parameter('linear_speed', 0.15)
+        self.declare_parameter('linear_speed', 0.55)
         self.declare_parameter('angular_speed', 15.0)
         self.declare_parameter('goal_x', 1.45)
         self.declare_parameter('goal_y', 1.20)

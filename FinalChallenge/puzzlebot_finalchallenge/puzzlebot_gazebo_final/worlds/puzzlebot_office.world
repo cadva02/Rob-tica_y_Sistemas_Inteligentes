@@ -78,7 +78,7 @@
     <include>
       <name>goal_marker_2</name>
       <uri>model://goal_marker_5</uri>
-      <pose>-3.0 3.0 0.01 0 0 0</pose>
+      <pose>-3.0 3.5 0.01 0 0 0</pose>
     </include>
 
     <include>
@@ -120,7 +120,13 @@
     <include>
       <name>marker_5</name>
       <uri>model://aruco_marker_5</uri>
-      <pose>-1.4 3.1 0.091 0 0 3.141592</pose>
+      <pose>-1.9 3.1 0.091 0 0 3.141592</pose>
+    </include>
+
+    <include>
+      <name>marker_6</name>
+      <uri>model://aruco_marker_6</uri>
+      <pose>3.8 3.1 0.091 0 0 3.141592</pose>
     </include>
 
     <gui fullscreen='0'>
