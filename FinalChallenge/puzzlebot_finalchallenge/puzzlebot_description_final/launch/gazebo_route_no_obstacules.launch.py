@@ -35,11 +35,10 @@ def generate_launch_description():
     declare_marker_map_arg = DeclareLaunchArgument(
         'marker_map_json',
         default_value=json.dumps([
-            {'id': 0, 'x': 2.0, 'y': -2.0, 'theta': 1.5708},
-            {'id': 1, 'x': 1.0, 'y': 2.0, 'theta': 3.141592654},
-            {'id': 2, 'x': -0.5, 'y': 2.5, 'theta': -1.5708},
-            {'id': 3, 'x': -0.5, 'y': -0.5, 'theta': 0.0},
-            {'id': 4, 'x': 3.0, 'y': -0.4, 'theta': -2.5562},
+            {'id': 1, 'x': 1.0, 'y': 2.5, 'theta': 3.141592654},
+            {'id': 2, 'x': -1.0, 'y': 1.5, 'theta': -1.5708},
+            {'id': 3, 'x': 0.0, 'y': -0.5, 'theta': 0.0},
+            {'id': 4, 'x': 3.0, 'y': 0.5, 'theta': 2.5},
         ]),
         description='ArUco marker map as JSON list with id, x, y, theta'
     )
@@ -102,15 +101,15 @@ def generate_launch_description():
             'x0': 0.0,
             'y0': 2.0,
             'theta0': 0.0,
-            'sigma_v': 0.12,
-            'sigma_w': 0.17,
+            'sigma_v': 0.05,
+            'sigma_w': 0.07,
             'sigma_obs_x': 0.15,
             'sigma_obs_y': 0.15,
-            'sigma_obs_theta': 0.25,
+            'sigma_obs_theta': 1.2,
             'aruco_distance_gain': 1.5,
             'aruco_theta_distance_gain': 1.5,
             'aruco_update_min_dist': 2.5,
-            'mahal_threshold': 12.0,
+            'mahal_threshold': 5.0,
         }],
     )
 
@@ -142,13 +141,13 @@ def generate_launch_description():
             'start_y': 2.0,
             'publish_rate': 2.0,
             'min_waypoint_time_sec': 2.0,
+            'loop_route': True,
             'custom_waypoints_json': json.dumps([
                 {'x': 0.0, 'y': 2.0, 'theta': -0.4636476090008061},
                 {'x': 1.0, 'y': 1.5, 'theta': -0.7853981633974483},
-                {'x': 2.5, 'y': 0.0, 'theta': -2.0344439357957027},
+                {'x': 2.5, 'y': 0.0, 'theta': 3.141592653589793},
                 {'x': 2.0, 'y': -1.0, 'theta': 3.141592653589793},
                 {'x': -1.0, 'y': -1.0, 'theta': 1.2490457723982544},
-                {'x': 0.0, 'y': 2.0, 'theta': 0.0},
             ]),
         }],
     )
